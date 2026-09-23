@@ -1,0 +1,66 @@
+# =============================================================================
+# NICE HTA PLATFORM
+# requirements.txt  —  Linux / OpenStack (headless server) deployment
+# =============================================================================
+# Install with:
+#   pip install -r requirements-openstack.txt
+#
+# System-level dependency (NOT pip-installable, install via apt first):
+#   sudo apt-get update && sudo apt-get install -y ghostscript
+#
+# Ollama must be installed and running separately (not a Python package):
+#   curl -fsSL https://ollama.com/install.sh | sh
+#   ollama pull llama3.1:8b
+#   ollama serve
+#
+# NOTE ON camelot-py:
+#   Installed WITHOUT the [base]/[all]/[cv] extras. Those extras hardcode
+#   a dependency on plain "opencv-python" (the GUI build, which needs
+#   libGL.so.1 and other X11 libraries not present on a headless server).
+#   If installed alongside "opencv-python-headless" below, both packages
+#   write into the same site-packages/cv2 folder and whichever installs
+#   last silently wins — an install-order-dependent conflict that can
+#   surface later as "ImportError: libGL.so.1: cannot open shared object
+#   file" the first time table extraction is used. Keeping camelot-py
+#   bare and pinning ghostscript + opencv-python-headless explicitly
+#   avoids this entirely. Only the lattice/stream flavors are used in
+#   this codebase (no camelot.plot(), no pdftopng), so nothing
+#   functional is lost by omitting the extra.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Web App / UI
+# -----------------------------------------------------------------------------
+streamlit>=1.32,<2
+
+# -----------------------------------------------------------------------------
+# Data Handling / Excel
+# -----------------------------------------------------------------------------
+pandas>=2.0,<3
+openpyxl>=3.1,<4
+
+# -----------------------------------------------------------------------------
+# Web Scraping (ta_scraper.py)
+# -----------------------------------------------------------------------------
+requests>=2.31,<3
+beautifulsoup4>=4.12,<5
+lxml>=5.0,<6
+
+# -----------------------------------------------------------------------------
+# PDF / Table Extraction (hta_table_engine.py, table_repository.py)
+# -----------------------------------------------------------------------------
+pdfplumber>=0.11,<1
+camelot-py>=0.11,<1
+opencv-python-headless>=4.9,<5
+ghostscript>=0.7,<1
+
+# -----------------------------------------------------------------------------
+# RAG / LLM Pipeline (rag.py)
+# -----------------------------------------------------------------------------
+langchain>=0.2,<0.3
+langchain-community>=0.2,<0.3
+langchain-chroma>=0.1,<0.2
+chromadb>=0.5,<0.6
+sentence-transformers>=2.7,<3
+transformers>=4.40,<5
+torch>=2.2,<3
