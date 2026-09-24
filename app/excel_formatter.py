@@ -1,4 +1,4 @@
-from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 # =============================================================================
@@ -15,9 +15,7 @@ THIN = Side(style="thin", color="C0C0C0")
 
 BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 
-HEADER_ALIGN = Alignment(
-    horizontal="center", vertical="center", wrap_text=True
-)
+HEADER_ALIGN = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
 BODY_ALIGN = Alignment(horizontal="left", vertical="top", wrap_text=True)
 
@@ -49,10 +47,8 @@ def auto_width(ws):
     """Automatically resize columns."""
 
     for column in ws.columns:
-
         width = max(
-            (len(str(cell.value)) if cell.value is not None else 0)
-            for cell in column
+            (len(str(cell.value)) if cell.value is not None else 0) for cell in column
         )
 
         ws.column_dimensions[get_column_letter(column[0].column)].width = min(
@@ -63,9 +59,7 @@ def auto_width(ws):
 def add_filter(ws, header_row):
     """Apply Excel filter."""
 
-    ws.auto_filter.ref = (
-        f"A{header_row}:" f"{get_column_letter(ws.max_column)}" f"{ws.max_row}"
-    )
+    ws.auto_filter.ref = f"A{header_row}:{get_column_letter(ws.max_column)}{ws.max_row}"
 
 
 # =============================================================================

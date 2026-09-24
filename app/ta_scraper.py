@@ -4,12 +4,10 @@
 # =============================================================================
 
 import re
-import requests
+
 import pandas as pd
-
-from bs4 import BeautifulSoup
-from bs4 import Tag
-
+import requests
+from bs4 import BeautifulSoup, Tag
 from excel_manager import load_reference_excel
 
 # =============================================================================
@@ -39,6 +37,7 @@ def normalize_ta_input(value: str) -> str:
         ta = f"TA{ta}"
 
     return f"https://www.nice.org.uk/guidance/{ta.lower()}"
+
 
 # =============================================================================
 # TA Number Formatter
@@ -71,6 +70,7 @@ def normalize_ta_number(value) -> str:
 
     return f"TA{int(digits):03d}"
 
+
 # =============================================================================
 # NICE Configuration
 # =============================================================================
@@ -79,30 +79,21 @@ def normalize_ta_number(value) -> str:
 BASE_URL = "https://www.nice.org.uk/guidance/{ta}"
 
 HEADERS = {
-
-    "User-Agent":
-    (
+    "User-Agent": (
         "Mozilla/5.0 "
         "(Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 "
         "(KHTML, like Gecko) "
         "Chrome/120.0 Safari/537.36"
     )
-
 }
 
 TITLE_SPLIT_TOKENS = [
-
     " for treating ",
-
     " for the treatment of ",
-
     " for ",
-
     " with ",
-
-    " and "
-
+    " and ",
 ]
 
 # =============================================================================
@@ -120,42 +111,26 @@ def build_url(value):
     if value.lower().startswith("http"):
         return value
 
-    return BASE_URL.format(
-        ta=normalize_ta_number(value).lower()
-    )
+    return BASE_URL.format(ta=normalize_ta_number(value).lower())
 
 
 # =============================================================================
 # Download NICE Page
 # =============================================================================
 
+
 def fetch_page(url):
 
     try:
-
-        response = requests.get(
-
-            url,
-
-            headers=HEADERS,
-
-            timeout=20
-
-        )
+        response = requests.get(url, headers=HEADERS, timeout=20)
 
         response.raise_for_status()
 
-        return BeautifulSoup(
-
-            response.text,
-
-            "lxml"
-
-        )
+        return BeautifulSoup(response.text, "lxml")
 
     except Exception:
-
         return None
+
 
 # =============================================================================
 # Title
@@ -167,14 +142,10 @@ def extract_title(soup):
     h1 = soup.find("h1")
 
     if h1:
-
-        return h1.get_text(
-
-            strip=True
-
-        )
+        return h1.get_text(strip=True)
 
     return None
+
 
 # =============================================================================
 # Breadcrumbs
@@ -183,41 +154,13 @@ def extract_title(soup):
 
 def extract_breadcrumbs(soup):
 
-    nav = soup.find(
-
-        "nav",
-
-        attrs={
-
-            "aria-label":
-
-            re.compile(
-
-                "breadcrumb",
-
-                re.I
-
-            )
-
-        }
-
-    )
+    nav = soup.find("nav", attrs={"aria-label": re.compile("breadcrumb", re.IGNORECASE)})
 
     if nav is None:
-
         return []
 
-    return [
+    return [item.get_text(strip=True) for item in nav.find_all("li")]
 
-        item.get_text(
-
-            strip=True
-
-        )
-
-        for item in nav.find_all("li")
-
-    ]
 
 # =============================================================================
 # Disease Area
@@ -227,26 +170,17 @@ def extract_breadcrumbs(soup):
 def extract_disease_area(breadcrumbs):
 
     try:
-
         idx = next(
-
             i
-
-            for i, b
-
-            in enumerate(breadcrumbs)
-
-            if "conditions and diseases"
-
-            in b.lower()
-
+            for i, b in enumerate(breadcrumbs)
+            if "conditions and diseases" in b.lower()
         )
 
         return breadcrumbs[idx + 1]
 
     except (StopIteration, IndexError):
-
         return None
+
 
 # =============================================================================
 # Disease Sub Area
@@ -256,26 +190,17 @@ def extract_disease_area(breadcrumbs):
 def extract_disease_sub_area(breadcrumbs):
 
     try:
-
         idx = next(
-
             i
-
-            for i, b
-
-            in enumerate(breadcrumbs)
-
-            if "conditions and diseases"
-
-            in b.lower()
-
+            for i, b in enumerate(breadcrumbs)
+            if "conditions and diseases" in b.lower()
         )
 
         return breadcrumbs[idx + 2]
 
     except (StopIteration, IndexError):
-
         return None
+
 
 # =============================================================================
 # Technology Name
@@ -285,22 +210,16 @@ def extract_disease_sub_area(breadcrumbs):
 def extract_technology_name(title):
 
     if title is None:
-
         return None
 
     title_lower = title.lower()
 
     for token in TITLE_SPLIT_TOKENS:
-
         if token in title_lower:
-
-            return title[
-
-                :title_lower.index(token)
-
-            ].strip()
+            return title[: title_lower.index(token)].strip()
 
     return title
+
 
 # =============================================================================
 # Publication Date
@@ -309,29 +228,15 @@ def extract_technology_name(title):
 
 def extract_publication_date(soup):
 
-    text = soup.get_text(
+    text = soup.get_text(" ", strip=True)
 
-        " ",
-
-        strip=True
-
-    )
-
-    match = re.search(
-
-        r"Published[:\s]+(\d{1,2}\s+\w+\s+\d{4})",
-
-        text,
-
-        re.I
-
-    )
+    match = re.search(r"Published[:\s]+(\d{1,2}\s+\w+\s+\d{4})", text, re.IGNORECASE)
 
     if match:
-
         return match.group(1)
 
     return None
+
 
 # =============================================================================
 # Last Updated Date
@@ -342,18 +247,9 @@ def extract_last_updated_date(soup):
 
     text = soup.get_text(" ", strip=True)
 
-    match = re.search(
-
-        r"Last updated[:\s]+(\d{1,2}\s+\w+\s+\d{4})",
-
-        text,
-
-        re.I
-
-    )
+    match = re.search(r"Last updated[:\s]+(\d{1,2}\s+\w+\s+\d{4})", text, re.IGNORECASE)
 
     if match:
-
         return match.group(1)
 
     return None
@@ -390,6 +286,7 @@ def extract_recommendations(soup):
 # New NICE Layout
 # =============================================================================
 
+
 def extract_recommendations_new(soup):
     """
     Extract everything inside the '1 Recommendations'
@@ -406,7 +303,6 @@ def extract_recommendations_new(soup):
     started = False
 
     for child in chapter.children:
-
         if not isinstance(child, Tag):
             continue
 
@@ -415,11 +311,9 @@ def extract_recommendations_new(soup):
         # ---------------------------------------------------------
 
         if child.name == "h2":
-
             heading = child.get_text(" ", strip=True).lower()
 
             if "recommendation" in heading:
-
                 started = True
                 continue
 
@@ -434,7 +328,6 @@ def extract_recommendations_new(soup):
         # ---------------------------------------------------------
 
         if child.name == "p":
-
             text = child.get_text(" ", strip=True)
 
             if text:
@@ -445,7 +338,6 @@ def extract_recommendations_new(soup):
         # ---------------------------------------------------------
 
         elif child.name == "article":
-
             number = child.find("h3")
 
             body = child.find("div")
@@ -454,20 +346,15 @@ def extract_recommendations_new(soup):
                 continue
 
             if number:
-
-                output.append(
-                    number.get_text(strip=True)
-                )
+                output.append(number.get_text(strip=True))
 
             for p in body.find_all("p", recursive=False):
-
                 text = p.get_text(" ", strip=True)
 
                 if text:
                     output.append(text)
 
             for li in body.select("li"):
-
                 bullet = li.get_text(" ", strip=True)
 
                 if bullet:
@@ -482,6 +369,7 @@ def extract_recommendations_new(soup):
 # =============================================================================
 # Older NICE Layout
 # =============================================================================
+
 
 def extract_recommendations_old(soup):
     """
@@ -499,7 +387,6 @@ def extract_recommendations_old(soup):
     started = False
 
     for child in chapter.children:
-
         if not isinstance(child, Tag):
             continue
 
@@ -508,11 +395,9 @@ def extract_recommendations_old(soup):
         # ---------------------------------------------------------
 
         if child.name == "h2":
-
             heading = child.get_text(" ", strip=True).lower()
 
             if "recommendation" in heading:
-
                 started = True
                 continue
 
@@ -527,7 +412,6 @@ def extract_recommendations_old(soup):
         # ---------------------------------------------------------
 
         if child.name == "p":
-
             text = child.get_text(" ", strip=True)
 
             if text:
@@ -537,31 +421,21 @@ def extract_recommendations_old(soup):
         # Numbered recommendations
         # ---------------------------------------------------------
 
-        paragraph = child.find(
-            "p",
-            class_="numbered-paragraph"
-        )
+        paragraph = child.find("p", class_="numbered-paragraph")
 
         if paragraph is None:
             continue
 
         number = ""
 
-        span = paragraph.find(
-            "span",
-            class_="paragraph-number"
-        )
+        span = paragraph.find("span", class_="paragraph-number")
 
         if span:
-
             number = span.get_text(strip=True)
 
             span.extract()
 
-        text = paragraph.get_text(
-            " ",
-            strip=True
-        )
+        text = paragraph.get_text(" ", strip=True)
 
         if number:
             output.append(number)
@@ -569,22 +443,16 @@ def extract_recommendations_old(soup):
         output.append(text)
 
         for li in child.select("ul li"):
-
-            bullet = li.get_text(
-                " ",
-                strip=True
-            )
+            bullet = li.get_text(" ", strip=True)
 
             if bullet:
-
-                output.append(
-                    f"• {bullet}"
-                )
+                output.append(f"• {bullet}")
 
     if output:
         return "\n\n".join(output)
 
     return None
+
 
 # =============================================================================
 # Scrape Single TA
@@ -602,7 +470,6 @@ def scrape_ta(value):
     soup = fetch_page(url)
 
     if soup is None:
-
         return None
 
     # Recommendations page
@@ -619,38 +486,17 @@ def scrape_ta(value):
     else:
         nice_recommendation = None
 
-    ta_number = normalize_ta_number(
-        url.rstrip("/").split("/")[-1]
-    )
+    ta_number = normalize_ta_number(url.rstrip("/").split("/")[-1])
 
     record = {
-
         "TA Number": ta_number,
-
         "Title": title,
-
-        "Disease Area": extract_disease_area(
-            breadcrumbs
-        ),
-
-        "Disease Sub-Area": extract_disease_sub_area(
-            breadcrumbs
-        ),
-
-        "Technology Name": extract_technology_name(
-            title
-        ),
-
-        "Publication Date": extract_publication_date(
-            soup
-        ),
-
-        "Last Updated": extract_last_updated_date(
-            soup
-        ),
-
-        "NICE Recommendation": nice_recommendation
-
+        "Disease Area": extract_disease_area(breadcrumbs),
+        "Disease Sub-Area": extract_disease_sub_area(breadcrumbs),
+        "Technology Name": extract_technology_name(title),
+        "Publication Date": extract_publication_date(soup),
+        "Last Updated": extract_last_updated_date(soup),
+        "NICE Recommendation": nice_recommendation,
     }
 
     # ------------------------------------------------------------
@@ -658,32 +504,16 @@ def scrape_ta(value):
     # ------------------------------------------------------------
 
     try:
-
         reference = load_reference_excel()
 
         reference["TA ID"] = (
-
-            reference["TA ID"]
-
-            .map(normalize_ta_number)
-
+            reference["TA ID"].map(normalize_ta_number)
             # .astype(str)
-
             # .str.upper()
-
             # .str.strip()
-
         )
 
-        match = reference.loc[
-
-            reference["TA ID"]
-
-            ==
-
-            record["TA Number"]
-
-        ]
+        match = reference.loc[reference["TA ID"] == record["TA Number"]]
 
         # --------------------------------------------------------
         # Store ALL matching Excel rows
@@ -692,38 +522,15 @@ def scrape_ta(value):
         reference_rows = []
 
         for _, row in match.iterrows():
-
             reference_row = {
-
-                "Rec no.": row.get(
-                    "Rec no.",
-                    ""
-                ),
-
-                "Appraisal Process": row.get(
-                    "STA/MTA process",
-                    ""
-                ),
-
+                "Rec no.": row.get("Rec no.", ""),
+                "Appraisal Process": row.get("STA/MTA process", ""),
                 "Recommendation": row.get(
-                    "Categorisation (for specific recommendation)",
-                    ""
+                    "Categorisation (for specific recommendation)", ""
                 ),
-
-                "Technology Type": row.get(
-                    "Technology type",
-                    ""
-                ),
-
-                "Indication": row.get(
-                    "Indication",
-                    ""
-                ),
-
-                "Comments": row.get(
-                    "Comment",
-                    ""
-                )
+                "Technology Type": row.get("Technology type", ""),
+                "Indication": row.get("Indication", ""),
+                "Comments": row.get("Comment", ""),
             }
 
             reference_rows.append(reference_row)
@@ -731,7 +538,6 @@ def scrape_ta(value):
         record["_reference_rows"] = reference_rows
 
     except Exception:
-
         record["_reference_rows"] = []
 
     return record
@@ -740,6 +546,7 @@ def scrape_ta(value):
 # =============================================================================
 # Public Function for Streamlit
 # =============================================================================
+
 
 def scrape_ta_page(value):
     """
@@ -761,18 +568,13 @@ def scrape_ta_page(value):
     record = scrape_ta(value)
 
     if record is None:
-        raise ValueError(
-            "Unable to retrieve NICE webpage."
-        )
+        raise ValueError("Unable to retrieve NICE webpage.")
 
     # ------------------------------------------------------------
     # Get ALL matching reference Excel rows
     # ------------------------------------------------------------
 
-    reference_rows = record.pop(
-        "_reference_rows",
-        []
-    )
+    reference_rows = record.pop("_reference_rows", [])
 
     # ------------------------------------------------------------
     # Build output
@@ -786,7 +588,6 @@ def scrape_ta_page(value):
     # ------------------------------------------------------------
 
     for field, value in record.items():
-
         fields.append(field)
         results.append(value)
 
@@ -803,19 +604,14 @@ def scrape_ta_page(value):
         "Recommendation",
         "Technology Type",
         "Indication",
-        "Comments"
+        "Comments",
     ]
 
     for row in reference_rows:
-
         for field in excel_fields:
-
             fields.append(field)
 
-            value = row.get(
-                field,
-                ""
-            )
+            value = row.get(field, "")
 
             # Convert Excel NaN to blank
             if pd.isna(value):
@@ -827,12 +623,7 @@ def scrape_ta_page(value):
     # Create final dataframe
     # ------------------------------------------------------------
 
-    preview = pd.DataFrame(
-        {
-            "Field": fields,
-            "Result": results
-        }
-    )
+    preview = pd.DataFrame({"Field": fields, "Result": results})
 
     return preview, len(reference_rows) > 1
 
@@ -842,13 +633,4 @@ def scrape_ta_page(value):
 # =============================================================================
 
 if __name__ == "__main__":
-
-    print(
-
-        scrape_ta(
-
-            "TA970"
-
-        )
-
-    )
+    print(scrape_ta("TA970"))

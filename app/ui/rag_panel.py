@@ -4,10 +4,9 @@
 
 import traceback
 
-import streamlit as st
-
-import repository
 import rag
+import repository
+import streamlit as st
 
 # =============================================================================
 # Main UI
@@ -33,19 +32,15 @@ Augmented Generation (RAG).
     # -------------------------------------------------------------------------
 
     if "rag_ready" not in st.session_state:
-
         st.session_state.rag_ready = False
 
     if "rag_result" not in st.session_state:
-
         st.session_state.rag_result = None
 
     if "rag_document" not in st.session_state:
-
         st.session_state.rag_document = None
 
     if "chat_history" not in st.session_state:
-
         st.session_state.chat_history = []
 
     # -------------------------------------------------------------------------
@@ -53,11 +48,9 @@ Augmented Generation (RAG).
     # -------------------------------------------------------------------------
 
     try:
-
         repository_df = repository.load_repository_index()
 
     except Exception as error:
-
         st.error(error)
 
         return
@@ -65,7 +58,6 @@ Augmented Generation (RAG).
     downloaded = repository.get_downloaded_pdfs(repository_df)
 
     if downloaded.empty:
-
         st.warning("No downloaded PDF documents available.")
 
         return
@@ -77,15 +69,12 @@ Augmented Generation (RAG).
     # -------------------------------------------------------------------------
 
     selected_ta = (
-        st.text_input(
-            "Enter TA Number", placeholder="Example: TA970", key="rag_ta"
-        )
+        st.text_input("Enter TA Number", placeholder="Example: TA970", key="rag_ta")
         .strip()
         .upper()
     )
 
     if selected_ta == "":
-
         st.info("Enter a TA Number to load documents.")
 
         return
@@ -95,7 +84,6 @@ Augmented Generation (RAG).
     ]
 
     if filtered_documents.empty:
-
         st.error(f"No documents found for {selected_ta}")
 
         return
@@ -107,8 +95,10 @@ Augmented Generation (RAG).
     selected_index = st.selectbox(
         "Select Document",
         options=list(filtered_documents.index),
-        format_func=lambda x: f"{filtered_documents.loc[x, 'Document ID']} - "
-        f"{filtered_documents.loc[x, 'Document Name']}",
+        format_func=lambda x: (
+            f"{filtered_documents.loc[x, 'Document ID']} - "
+            f"{filtered_documents.loc[x, 'Document Name']}"
+        ),
         key="rag_document_selector",
     )
 
@@ -119,7 +109,6 @@ Augmented Generation (RAG).
     current_document = document["Document ID"]
 
     if st.session_state.get("rag_document") != current_document:
-
         st.session_state.rag_ready = False
 
         st.session_state.rag_result = None
@@ -139,13 +128,11 @@ Augmented Generation (RAG).
     col1, col2 = st.columns(2)
 
     with col1:
-
         page_from = st.number_input(
             "From", min_value=1, value=1, step=1, key="rag_page_from"
         )
 
     with col2:
-
         page_to = st.number_input(
             "To", min_value=1, value=20, step=1, key="rag_page_to"
         )
@@ -153,15 +140,11 @@ Augmented Generation (RAG).
     st.write("")
 
     if st.button("Process Document", type="primary", use_container_width=True):
-
         with st.spinner("Building RAG pipeline..."):
-
             try:
-
                 rag.build_rag(document, page_from=page_from, page_to=page_to)
 
             except Exception as error:
-
                 st.error(error)
 
                 return
@@ -171,7 +154,6 @@ Augmented Generation (RAG).
         st.success("RAG pipeline ready.")
 
     if not st.session_state.rag_ready:
-
         return
 
     st.divider()
@@ -179,9 +161,7 @@ Augmented Generation (RAG).
     st.subheader("Conversation")
 
     if len(st.session_state.chat_history) > 0:
-
         for i, chat in enumerate(st.session_state.chat_history, start=1):
-
             st.markdown(f"### 👤 Question {i}")
 
             st.info(chat["question"])
@@ -204,21 +184,16 @@ Augmented Generation (RAG).
     )
 
     if st.button("Ask Question", use_container_width=True):
-
         if not question.strip():
-
             st.warning("Please enter a question.")
 
             return
 
         with st.spinner("Generating answer..."):
-
             try:
-
                 result = rag.ask_question(question)
 
             except Exception:
-
                 st.code(traceback.format_exc())
 
                 return
@@ -234,9 +209,7 @@ Augmented Generation (RAG).
     col1, col2 = st.columns([1, 1], gap="large")
 
     with col1:
-
         if st.button("🗑 Clear Chat"):
-
             st.session_state.chat_history = []
 
             st.session_state.rag_result = None
@@ -246,7 +219,6 @@ Augmented Generation (RAG).
     chat_text = ""
 
     for i, chat in enumerate(st.session_state.chat_history, start=1):
-
         chat_text += f"Question {i}\n"
 
         chat_text += chat["question"]
@@ -264,7 +236,6 @@ Augmented Generation (RAG).
         chat_text += "\n\n"
 
     with col2:
-
         st.download_button(
             label="⬇ Download Conversation",
             data=chat_text,
@@ -273,7 +244,6 @@ Augmented Generation (RAG).
         )
 
     if st.session_state.rag_result is not None:
-
         result = st.session_state.rag_result
 
         sources = result["sources"]
@@ -283,7 +253,6 @@ Augmented Generation (RAG).
         evidence = []
 
         for source in sources:
-
             evidence.append(
                 {
                     "Page": source["page"],
@@ -302,13 +271,10 @@ Augmented Generation (RAG).
         col1, col2, col3 = st.columns(3)
 
         with col1:
-
             st.metric("Retrieved Chunks", performance["retrieved_chunks"])
 
         with col2:
-
             st.metric("Retrieval Time (s)", performance["retrieval_time"])
 
         with col3:
-
             st.metric("Response Time (s)", performance["response_time"])

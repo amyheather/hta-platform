@@ -5,9 +5,9 @@
 
 import json
 import shutil
-import pandas as pd
 from pathlib import Path
 
+import pandas as pd
 from paths import EXCEL_CONFIG_FILE, MASTER_EXCEL_FILE
 
 # =============================================================================
@@ -29,7 +29,6 @@ def save_excel(uploaded_file):
     # ------------------------------------------------------------
 
     if isinstance(uploaded_file, Path):
-
         shutil.copy2(uploaded_file, MASTER_EXCEL_FILE)
 
         original_filename = uploaded_file.name
@@ -39,9 +38,7 @@ def save_excel(uploaded_file):
     # ------------------------------------------------------------
 
     else:
-
         with open(MASTER_EXCEL_FILE, "wb") as file:
-
             shutil.copyfileobj(uploaded_file, file)
 
         original_filename = uploaded_file.name
@@ -57,7 +54,6 @@ def save_excel(uploaded_file):
     }
 
     with open(EXCEL_CONFIG_FILE, "w") as file:
-
         json.dump(config, file, indent=4)
 
     return MASTER_EXCEL_FILE
@@ -100,7 +96,6 @@ def load_excel_path():
     """
 
     if MASTER_EXCEL_FILE.exists():
-
         return MASTER_EXCEL_FILE
 
     return None
@@ -119,7 +114,6 @@ def load_reference_excel():
     excel_path = load_excel_path()
 
     if excel_path is None:
-
         raise FileNotFoundError("Reference Excel has not been uploaded.")
 
     return pd.read_excel(excel_path)
@@ -136,11 +130,9 @@ def get_excel_information():
     """
 
     if not EXCEL_CONFIG_FILE.exists():
-
         return {}
 
     with open(EXCEL_CONFIG_FILE) as file:
-
         return json.load(file)
 
 
@@ -155,9 +147,7 @@ def clear_excel():
     """
 
     if MASTER_EXCEL_FILE.exists():
-
         MASTER_EXCEL_FILE.unlink()
 
     with open(EXCEL_CONFIG_FILE, "w") as file:
-
         json.dump({}, file)

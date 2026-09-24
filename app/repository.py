@@ -7,8 +7,7 @@ import logging
 import shutil
 
 import pandas as pd
-
-from paths import PROJECT_ROOT, DOCUMENT_FOLDER, INDEX_FILE
+from paths import DOCUMENT_FOLDER, INDEX_FILE, PROJECT_ROOT
 
 # =============================================================================
 # Logging
@@ -47,7 +46,6 @@ def load_repository_index():
     # ------------------------------------------------------------
 
     if not INDEX_FILE.exists():
-
         logger.info("Repository index not found. Creating new repository.")
 
         repository = pd.DataFrame(columns=required_columns)
@@ -67,9 +65,7 @@ def load_repository_index():
     # ------------------------------------------------------------
 
     for column in required_columns:
-
         if column not in repository.columns:
-
             repository[column] = ""
 
     repository = repository[required_columns]
@@ -111,16 +107,12 @@ def update_repository_index(new_documents):
     repository = load_repository_index()
 
     if repository.empty:
-
         repository = new_documents.copy()
 
     else:
-
         repository = pd.concat([repository, new_documents], ignore_index=True)
 
-        repository.drop_duplicates(
-            subset="Document URL", keep="last", inplace=True
-        )
+        repository.drop_duplicates(subset="Document URL", keep="last", inplace=True)
 
     repository.reset_index(drop=True, inplace=True)
 
@@ -144,7 +136,6 @@ def delete_ta_documents(ta_number):
     folder = DOCUMENT_FOLDER / ta_number
 
     if folder.exists():
-
         shutil.rmtree(folder)
 
         logger.info(f"Deleted folder : {folder}")
@@ -169,7 +160,6 @@ def get_downloaded_pdfs(repository):
     """
 
     if repository.empty:
-
         return repository.copy()
 
     pdfs = repository.copy()
@@ -177,9 +167,7 @@ def get_downloaded_pdfs(repository):
     pdfs = pdfs.loc[pdfs["File Type"].fillna("").str.upper() == "PDF"]
 
     pdfs = pdfs.loc[
-        pdfs["Download Status"]
-        .fillna("")
-        .isin(["Downloaded", "Already Downloaded"])
+        pdfs["Download Status"].fillna("").isin(["Downloaded", "Already Downloaded"])
     ]
 
     pdfs.reset_index(drop=True, inplace=True)
@@ -236,7 +224,6 @@ def get_pdf_path(document):
     pdf_path = PROJECT_ROOT / document["Local File"]
 
     if not pdf_path.exists():
-
         raise FileNotFoundError(f"PDF not found : {pdf_path}")
 
     return pdf_path

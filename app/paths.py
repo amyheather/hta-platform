@@ -10,15 +10,12 @@ from pathlib import Path
 # =============================================================================
 
 try:
-
     PROJECT_ROOT = Path(__file__).resolve().parent
 
 except NameError:
-
     PROJECT_ROOT = Path.cwd()
 
     if PROJECT_ROOT.name == "modules":
-
         PROJECT_ROOT = PROJECT_ROOT.parent
 
 # =============================================================================
@@ -62,7 +59,6 @@ for folder in [
     TEMP_FOLDER,
     ASSETS_FOLDER,
 ]:
-
     folder.mkdir(parents=True, exist_ok=True)
 
 # =============================================================================
@@ -70,5 +66,4 @@ for folder in [
 # =============================================================================
 
 if not EXCEL_CONFIG_FILE.exists():
-
     EXCEL_CONFIG_FILE.write_text("{}")

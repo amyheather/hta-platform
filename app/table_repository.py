@@ -3,26 +3,24 @@
 # Table Repository
 # =============================================================================
 
-import re
-import logging
-import warnings
-import requests
-import camelot
-import pdfplumber
 import json
-from bs4 import BeautifulSoup
-import pandas as pd
-
-from pathlib import Path
+import logging
+import re
+import warnings
 from difflib import SequenceMatcher
+from pathlib import Path
 
+import camelot
+import pandas as pd
+import pdfplumber
+import requests
+from bs4 import BeautifulSoup
 from paths import (
-    PROJECT_ROOT,
     DOCUMENT_FOLDER,
-    TABLE_FOLDER,
     INDEX_FILE,
+    PROJECT_ROOT,
+    TABLE_FOLDER,
 )
-
 from repository import get_downloaded_pdfs, get_pdf_path
 
 warnings.filterwarnings("ignore", message="Cannot set gray non-stroke color.*")
@@ -67,7 +65,6 @@ def validate_url(url):
     """
 
     if not isinstance(url, str):
-
         return False
 
     pattern = r"^https://www\.nice\.org\.uk/guidance/[A-Za-z0-9]+"
@@ -81,7 +78,6 @@ def build_absolute_url(link):
     """
 
     if link.startswith("http"):
-
         return link
 
     return BASE_URL + link
@@ -95,7 +91,6 @@ def extract_ta_number(url):
     match = re.search(r"/guidance/(ta\d+)", url.lower())
 
     if match:
-
         return match.group(1).upper()
 
     return "UNKNOWN"
@@ -128,11 +123,9 @@ def fetch_page(url):
     """Download and parse a NICE guidance page."""
 
     if not validate_url(url):
-
         return None
 
     try:
-
         response = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
 
         response.raise_for_status()
@@ -140,7 +133,6 @@ def fetch_page(url):
         return BeautifulSoup(response.text, "html.parser")
 
     except Exception as error:
-
         logger.error(error)
 
         return None
@@ -179,17 +171,14 @@ def fetch_guidance_document(guidance_url):
     soup = fetch_page(guidance_url)
 
     if soup is None:
-
         return create_empty_dataframe()
 
     documents = []
 
     for link in soup.find_all("a", href=True):
-
         text = link.get_text(" ", strip=True)
 
         if "download guidance" not in text.lower():
-
             continue
 
         documents.append(
@@ -226,22 +215,17 @@ def update_download_status(documents):
 
     downloaded_urls = set(repository["Document URL"])
 
-    downloaded_files = dict(
-        zip(repository["Document URL"], repository["Local File"])
-    )
+    downloaded_files = dict(zip(repository["Document URL"], repository["Local File"]))
 
     for index in documents.index:
-
         url = documents.loc[index, "Document URL"]
 
         if url in downloaded_urls:
-
             documents.loc[index, "Download Status"] = "Downloaded"
 
             documents.loc[index, "Local File"] = downloaded_files[url]
 
         else:
-
             documents.loc[index, "Download Status"] = "Not Downloaded"
 
     return documents
@@ -260,7 +244,6 @@ def fetch_history_documents(history_url):
     soup = fetch_page(history_url)
 
     if soup is None:
-
         return create_empty_dataframe()
 
     ta = extract_ta_number(history_url)
@@ -272,41 +255,33 @@ def fetch_history_documents(history_url):
     seen = set()
 
     for link in soup.find_all("a", href=True):
-
         href = link.get("href", "").strip()
 
         text = link.get_text(" ", strip=True)
 
         if "/documents/" not in href:
-
             continue
 
         if "(" not in text:
-
             continue
 
         document_url = build_absolute_url(href)
 
         if document_url in seen:
-
             continue
 
         seen.add(document_url)
 
         if "(PDF" in text.upper():
-
             filetype = "PDF"
 
         elif "(WORD" in text.upper():
-
             filetype = "WORD"
 
         elif "(EXCEL" in text.upper():
-
             filetype = "EXCEL"
 
         else:
-
             filetype = "OTHER"
 
         document_name = text.split("(")[0].strip()
@@ -314,11 +289,9 @@ def fetch_history_documents(history_url):
         lower = document_name.lower()
 
         if "register of interests" in lower:
-
             continue
 
         if lower.startswith("note"):
-
             continue
 
         documents.append(
@@ -357,7 +330,6 @@ def discover_documents(url):
     documents = pd.concat([guidance, history], ignore_index=True)
 
     if documents.empty:
-
         return documents
 
     ta = documents.iloc[0]["TA Number"]
@@ -406,7 +378,6 @@ def download_document(document):
     """Download a single document from its Document URL."""
 
     try:
-
         response = requests.get(
             document["Document URL"],
             headers=HEADERS,
@@ -417,7 +388,6 @@ def download_document(document):
         response.raise_for_status()
 
     except Exception as error:
-
         logger.error(error)
 
         document["Download Status"] = "Failed"
@@ -437,11 +407,8 @@ def download_document(document):
     filepath = ta_folder / filename
 
     with open(filepath, "wb") as file:
-
         for chunk in response.iter_content(chunk_size=8192):
-
             if chunk:
-
                 file.write(chunk)
 
     document["Download Status"] = "Downloaded"
@@ -478,13 +445,11 @@ def download_selected_documents(documents):
     already_downloaded = 0
 
     for _, row in documents.iterrows():
-
         # ------------------------------------------------------------
         # Already Downloaded
         # ------------------------------------------------------------
 
         if row["Download Status"] == "Downloaded":
-
             already_downloaded += 1
 
             logger.info(f"{row['Document Name']} already exists.")
@@ -506,7 +471,6 @@ def download_selected_documents(documents):
     repository = pd.DataFrame(downloaded)
 
     if not repository.empty:
-
         repository["Download Date"] = pd.Timestamp.now()
 
     repository.attrs["new_downloads"] = new_downloads
@@ -541,7 +505,6 @@ def load_repository():
     """
 
     if INDEX_FILE.exists():
-
         return pd.read_csv(INDEX_FILE)
 
     return create_empty_dataframe()
@@ -560,16 +523,12 @@ def update_repository(new_documents):
     repository = load_repository()
 
     if repository.empty:
-
         repository = new_documents
 
     else:
-
         repository = pd.concat([repository, new_documents], ignore_index=True)
 
-        repository = repository.drop_duplicates(
-            subset="Document URL", keep="last"
-        )
+        repository = repository.drop_duplicates(subset="Document URL", keep="last")
 
     save_repository(repository)
 
@@ -604,11 +563,9 @@ def extract_candidate_tables(pdf_path, page_from=None, page_to=None):
     # ------------------------------------------------------------
 
     if page_from is not None and page_to is not None:
-
         pages = f"{page_from}-{page_to}"
 
     else:
-
         pages = "all"
 
     logger.info(f"Processing Pages : {pages}")
@@ -618,7 +575,6 @@ def extract_candidate_tables(pdf_path, page_from=None, page_to=None):
     # ------------------------------------------------------------
 
     try:
-
         tables = camelot.read_pdf(
             str(pdf_path), flavor="lattice", pages=pages, suppress_stdout=True
         )
@@ -626,10 +582,9 @@ def extract_candidate_tables(pdf_path, page_from=None, page_to=None):
         logger.info(f"Lattice tables found: {len(tables)}")
 
         for i, table in enumerate(tables):
-
             logger.info("=" * 60)
 
-            logger.info(f"Lattice Table {i+1}")
+            logger.info(f"Lattice Table {i + 1}")
 
             logger.info(table.parsing_report)
 
@@ -638,13 +593,11 @@ def extract_candidate_tables(pdf_path, page_from=None, page_to=None):
             logger.info("=" * 60)
 
         if len(tables) > 0:
-
             logger.info(f"Lattice detected {len(tables)} table(s).")
 
             return tables
 
     except Exception:
-
         logger.exception("Lattice extraction failed.")
 
         raise
@@ -670,10 +623,9 @@ def extract_candidate_tables(pdf_path, page_from=None, page_to=None):
     logger.info(f"Stream tables found: {len(tables)}")
 
     for i, table in enumerate(tables):
-
         logger.info("=" * 60)
 
-        logger.info(f"Stream Table {i+1}")
+        logger.info(f"Stream Table {i + 1}")
 
         logger.info(table.parsing_report)
 
@@ -724,35 +676,28 @@ def get_text_above_table(pdf, table, margin=60):
     text = crop.extract_text()
 
     if text is None:
-
         return ""
 
     lines = []
 
     for line in text.split("\n"):
-
         line = line.strip()
 
         if not line:
-
             continue
 
         if re.search(r"Page\s+\d+\s+of\s+\d+", line):
-
             continue
 
         if "All rights reserved" in line:
-
             continue
 
         if "Company evidence submission" in line:
-
             continue
 
         lines.append(line)
 
     if not lines:
-
         return ""
 
     # ------------------------------------------------------------
@@ -760,21 +705,17 @@ def get_text_above_table(pdf, table, margin=60):
     # ------------------------------------------------------------
 
     for i in range(len(lines) - 1, -1, -1):
-
         if re.match(r"^Table\s+\d+", lines[i], re.IGNORECASE):
-
             caption = lines[i]
 
             j = i + 1
 
             while j < len(lines):
-
                 if re.match(
                     r"^(Table|Figure|Appendix|Section|Chapter)",
                     lines[j],
                     re.IGNORECASE,
                 ):
-
                     break
 
                 caption += " " + lines[j]
@@ -816,13 +757,11 @@ def extract_table_metadata(pdf, table):
     match = re.search(r"(Table\s+\d+[A-Za-z0-9.\-:]*)", caption, re.IGNORECASE)
 
     if match:
-
         table_number = match.group(1).strip(" :.-")
 
         table_name = caption.replace(table_number, "").strip(" :.-")
 
     else:
-
         table_number = None
 
         table_name = caption
@@ -864,10 +803,8 @@ def build_repository_tables(candidate_tables, pdf_path, document_id):
     # ------------------------------------------------------------
 
     with pdfplumber.open(pdf_path) as pdf:
-
         for i, table in enumerate(candidate_tables):
-
-            logger.info(f"Processing table {i+1}/{total}")
+            logger.info(f"Processing table {i + 1}/{total}")
 
             metadata = extract_table_metadata(pdf, table)
 
@@ -904,7 +841,6 @@ def normalize_title(text):
     """
 
     if pd.isna(text):
-
         return ""
 
     text = str(text).lower()
@@ -928,7 +864,6 @@ def normalize_table_number(text):
     """
 
     if pd.isna(text):
-
         return ""
 
     text = str(text).lower().strip(" :.-")
@@ -956,7 +891,6 @@ def should_merge(current_table, next_table):
     # ------------------------------------------------------------
 
     if next_table["PDF Page"] != current_table["End Page"] + 1:
-
         return {
             "merge": False,
             "reason": "Pages are not consecutive",
@@ -969,7 +903,6 @@ def should_merge(current_table, next_table):
     # ------------------------------------------------------------
 
     if next_table["Table Number"] is not None:
-
         return {
             "merge": False,
             "reason": "New table number",
@@ -982,7 +915,6 @@ def should_merge(current_table, next_table):
     # ------------------------------------------------------------
 
     if current_table["DataFrame"].shape[1] != next_table["DataFrame"].shape[1]:
-
         return {
             "merge": False,
             "reason": "Column mismatch",
@@ -995,11 +927,9 @@ def should_merge(current_table, next_table):
     # ------------------------------------------------------------
 
     if current_table["Table Name"] and next_table["Table Name"]:
-
         if normalize_title(current_table["Table Name"]) != normalize_title(
             next_table["Table Name"]
         ):
-
             return {
                 "merge": False,
                 "reason": "Title mismatch",
@@ -1083,7 +1013,6 @@ def merge_repository_tables(repository_tables):
     current = repository_tables[0].copy()
 
     for next_table in repository_tables[1:]:
-
         print("\n" + "=" * 80)
 
         print(
@@ -1117,7 +1046,6 @@ def merge_repository_tables(repository_tables):
         # --------------------------------------------------------
 
         if decision["merge"]:
-
             next_df = next_table["DataFrame"].copy()
 
             if decision["drop_header"]:
@@ -1132,7 +1060,6 @@ def merge_repository_tables(repository_tables):
             current["Merged Pages"].append(next_table["PDF Page"])
 
         else:
-
             merged.append(current)
 
             current = next_table.copy()
@@ -1159,32 +1086,25 @@ def extract_table_index(pdf_path):
 
     table_index = []
 
-    pattern = re.compile(
-        r"(Table\s+\d+)\s*[:\-]?\s*(.*?)\s+(\d+)$", re.IGNORECASE
-    )
+    pattern = re.compile(r"(Table\s+\d+)\s*[:\-]?\s*(.*?)\s+(\d+)$", re.IGNORECASE)
 
     with pdfplumber.open(pdf_path) as pdf:
-
         # -------------------------------------------------------------
         # Only inspect first 15 pages
         # -------------------------------------------------------------
 
         for page_number in range(min(15, len(pdf.pages))):
-
             page = pdf.pages[page_number]
 
             text = page.extract_text()
 
             if not text:
-
                 continue
 
             for line in text.split("\n"):
-
                 match = pattern.search(line.strip())
 
                 if match:
-
                     table_index.append(
                         {
                             "Table Number": match.group(1),
@@ -1212,7 +1132,6 @@ def validate_repository(official_index, merged_tables):
     repository = []
 
     for table in merged_tables:
-
         if not table["Table Number"]:
             continue
 
@@ -1242,31 +1161,25 @@ def validate_repository(official_index, merged_tables):
     )
 
     if "Table Number" in repository.columns:
-
         repository["_Number Key"] = repository["Table Number"].apply(
             normalize_table_number
         )
 
     else:
-
         repository["_Number Key"] = pd.Series(dtype=str)
 
     # -------------------------------------------------------------
     # Calculate PDF page offset
     # -------------------------------------------------------------
 
-    common = pd.merge(
-        official_index, repository, on="_Number Key", how="inner"
-    )
+    common = pd.merge(official_index, repository, on="_Number Key", how="inner")
 
     if len(common):
-
         page_offset = int(
             (common["Repository Page"] - common["Expected Page"]).mode()[0]
         )
 
     else:
-
         page_offset = 0
 
     logger.info(f"Detected PDF page offset : {page_offset}")
@@ -1278,7 +1191,6 @@ def validate_repository(official_index, merged_tables):
     results = []
 
     for _, official in official_index.iterrows():
-
         result = {
             "Table Number": official["Table Number"],
             "Official Title": official["Table Title"],
@@ -1295,7 +1207,6 @@ def validate_repository(official_index, merged_tables):
         # ---------------------------------------------------------
 
         if found.empty:
-
             result["Repository Title"] = ""
 
             result["Repository Page"] = None
@@ -1373,25 +1284,21 @@ def validate_repository(official_index, merged_tables):
         # ---------------------------------------------------------
 
         if title_match and page_match:
-
             result["Status"] = "PASS"
 
             result["Reason"] = "Matched"
 
         elif (not title_match) and page_match:
-
             result["Status"] = "MISMATCH"
 
             result["Reason"] = "Title mismatch"
 
         elif title_match and (not page_match):
-
             result["Status"] = "MISMATCH"
 
             result["Reason"] = "Page mismatch"
 
         else:
-
             result["Status"] = "MISMATCH"
 
             result["Reason"] = "Page & title mismatch"
@@ -1438,9 +1345,7 @@ def validate_repository(official_index, merged_tables):
 # 6.1 Extract Tables From PDF
 
 
-def extract_tables_from_pdf(
-    pdf_path, document_id, page_from=None, page_to=None
-):
+def extract_tables_from_pdf(pdf_path, document_id, page_from=None, page_to=None):
     """
     Complete extraction pipeline
     for one PDF.
@@ -1450,9 +1355,7 @@ def extract_tables_from_pdf(
         pdf_path, page_from=page_from, page_to=page_to
     )
 
-    repository_tables = build_repository_tables(
-        candidate_tables, pdf_path, document_id
-    )
+    repository_tables = build_repository_tables(candidate_tables, pdf_path, document_id)
 
     repository_tables = merge_repository_tables(repository_tables)
 
@@ -1494,7 +1397,6 @@ def process_repository(repository_df):
     pdfs = get_downloaded_pdfs(repository_df)
 
     for _, row in pdfs.iterrows():
-
         all_tables.extend(process_document(row))
 
     return all_tables
@@ -1529,7 +1431,6 @@ def export_tables(repository_tables):
     """
 
     for index, table in enumerate(repository_tables, start=1):
-
         # ------------------------------------------------------------
         # Create Folder
         # ------------------------------------------------------------
@@ -1547,7 +1448,6 @@ def export_tables(repository_tables):
         # ------------------------------------------------------------
 
         if table["Table Number"]:
-
             filename = (
                 table["Table Number"]
                 .replace(" ", "_")
@@ -1557,7 +1457,6 @@ def export_tables(repository_tables):
             )
 
         else:
-
             filename = f"Table_{index:02d}.csv"
 
         csv_file = output_folder / filename
@@ -1588,7 +1487,6 @@ def export_tables(repository_tables):
         }
 
         with open(json_file, "w", encoding="utf-8") as file:
-
             json.dump(metadata, file, indent=4, ensure_ascii=False)
 
     logger.info(f"{len(repository_tables)} table(s) exported successfully.")
@@ -1612,12 +1510,9 @@ def extract_tables(document_row, page_from=None, page_to=None, export=False):
     list
     """
 
-    tables = process_document(
-        document_row, page_from=page_from, page_to=page_to
-    )
+    tables = process_document(document_row, page_from=page_from, page_to=page_to)
 
     if export:
-
         export_tables(tables)
 
     return tables
@@ -1667,7 +1562,6 @@ def get_document_bytes(document):
         return None
 
     with open(file_path, "rb") as file:
-
         return file.read()
 
 

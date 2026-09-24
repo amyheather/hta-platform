@@ -2,17 +2,17 @@
 # Document Repository & Table Extraction
 # =============================================================================
 
-import streamlit as st
-import pandas as pd
-import ta_scraper
-from io import BytesIO
-
-import table_repository
-from pathlib import Path
 import base64
+from io import BytesIO
+from pathlib import Path
+
+import pandas as pd
+import streamlit as st
+import ta_scraper
+import table_repository
 from excel_formatter import (
-    format_single_table_excel,
     format_repository_excel,
+    format_single_table_excel,
 )
 
 # =============================================================================
@@ -39,27 +39,21 @@ extract tables and browse the extracted table repository.
     # -------------------------------------------------------------------------
 
     if "nice_url" not in st.session_state:
-
         st.session_state.nice_url = "TA970"
 
     if "available_documents" not in st.session_state:
-
         st.session_state.available_documents = None
 
     if "repository" not in st.session_state:
-
         st.session_state.repository = None
 
     if "selected_document" not in st.session_state:
-
         st.session_state.selected_document = None
 
     if "downloaded_document" not in st.session_state:
-
         st.session_state.downloaded_document = None
 
     if "tables" not in st.session_state:
-
         st.session_state.tables = None
 
     # =========================================================================
@@ -76,34 +70,24 @@ extract tables and browse the extracted table repository.
         key="table_extraction_ta",
     )
 
-    if st.button(
-        "Discover Documents", type="primary", use_container_width=True
-    ):
-
+    if st.button("Discover Documents", type="primary", use_container_width=True):
         if not nice_url.strip():
-
-            st.warning(
-                "Please enter a NICE Technology Appraisal Number or URL."
-            )
+            st.warning("Please enter a NICE Technology Appraisal Number or URL.")
 
             return
 
         with st.spinner("Discovering NICE documents..."):
-
             try:
-
                 documents = table_repository.discover_documents(
                     ta_scraper.normalize_ta_input(nice_url)
                 )
 
             except Exception as error:
-
                 st.error(error)
 
                 return
 
         if documents.empty:
-
             st.warning("No downloadable documents were found.")
 
             return
@@ -120,7 +104,6 @@ extract tables and browse the extracted table repository.
     # =========================================================================
 
     if st.session_state.available_documents is None:
-
         return
 
     st.divider()
@@ -143,29 +126,23 @@ extract tables and browse the extracted table repository.
         ],
         hide_index=True,
         use_container_width=True,
-        disabled=[
-            column for column in documents.columns if column != "Select"
-        ],
+        disabled=[column for column in documents.columns if column != "Select"],
     )
 
     if st.button(
         "Download Selected Documents", type="primary", use_container_width=True
     ):
-
-        selected_documents = edited_documents.loc[
-            edited_documents["Select"]
-        ].drop(columns="Select")
+        selected_documents = edited_documents.loc[edited_documents["Select"]].drop(
+            columns="Select"
+        )
 
         if selected_documents.empty:
-
             st.warning("Please select at least one document.")
 
             return
 
         with st.spinner("Downloading selected documents..."):
-
             try:
-
                 downloaded = table_repository.download_selected_documents(
                     selected_documents
                 )
@@ -183,7 +160,6 @@ extract tables and browse the extracted table repository.
                 )
 
             except Exception as error:
-
                 st.error(error)
 
                 return
@@ -199,20 +175,15 @@ extract tables and browse the extracted table repository.
         already_downloaded = downloaded.attrs.get("already_downloaded", 0)
 
         if new_downloads:
-
-            st.success(
-                f"✅ {new_downloads} document(s) downloaded successfully."
-            )
+            st.success(f"✅ {new_downloads} document(s) downloaded successfully.")
 
         if already_downloaded:
-
             st.info(
                 f"ℹ {already_downloaded} document(s) were already "
                 "available in your repository."
             )
 
         if len(downloaded):
-
             st.session_state.downloaded_document = downloaded.iloc[0]
 
     # ---------------------------------------------------------------------
@@ -220,7 +191,6 @@ extract tables and browse the extracted table repository.
     # ---------------------------------------------------------------------
 
     if st.session_state.downloaded_document is not None:
-
         st.divider()
 
         st.subheader("Selected Document")
@@ -237,44 +207,31 @@ extract tables and browse the extracted table repository.
         # Document PREVIEW and DOWNLOAD
         # -------------------------------------------------------------
         with col1:
-
             if st.button("👁 Preview PDF", use_container_width=True):
-
                 st.session_state.preview_pdf = str(pdf_path)
         # -------------------------------------------------------------
         # Download
         # -------------------------------------------------------------
 
-        with col2:
-
-            with open(pdf_path, "rb") as pdf_file:
-
-                st.download_button(
-                    "⬇ Download PDF",
-                    data=pdf_file,
-                    file_name=pdf_path.name,
-                    mime="application/pdf",
-                    use_container_width=True,
-                )
+        with col2, open(pdf_path, "rb") as pdf_file:
+            st.download_button(
+                "⬇ Download PDF",
+                data=pdf_file,
+                file_name=pdf_path.name,
+                mime="application/pdf",
+                use_container_width=True,
+            )
 
         # -------------------------------------------------------------
         # PDF Preview
         # -------------------------------------------------------------
 
-        if (
-            st.session_state.get("preview_pdf") == str(pdf_path)
-            and pdf_path.exists()
-        ):
-
+        if st.session_state.get("preview_pdf") == str(pdf_path) and pdf_path.exists():
             pdf_size_mb = pdf_path.stat().st_size / (1024 * 1024)
 
             if pdf_size_mb <= 10:
-
                 with open(pdf_path, "rb") as pdf_file:
-
-                    base64_pdf = base64.b64encode(pdf_file.read()).decode(
-                        "utf-8"
-                    )
+                    base64_pdf = base64.b64encode(pdf_file.read()).decode("utf-8")
 
                 pdf_display = f"""
                 <iframe
@@ -288,7 +245,6 @@ extract tables and browse the extracted table repository.
                 st.markdown(pdf_display, unsafe_allow_html=True)
 
             else:
-
                 st.warning(
                     "This document is larger than 10 MB and cannot "
                     "be previewed. Please download the PDF."
@@ -304,7 +260,6 @@ extract tables and browse the extracted table repository.
     st.subheader("Table Extraction")
 
     if st.session_state.downloaded_document is None:
-
         st.info("Please download a document before extracting tables.")
 
         return
@@ -314,13 +269,11 @@ extract tables and browse the extracted table repository.
     col1, col2 = st.columns(2)
 
     with col1:
-
         page_from = st.number_input(
             "From", min_value=1, value=1, step=1, key="table_page_from"
         )
 
     with col2:
-
         page_to = st.number_input(
             "To", min_value=1, value=20, step=1, key="table_page_to"
         )
@@ -332,11 +285,8 @@ extract tables and browse the extracted table repository.
         type="primary",
         use_container_width=True,
     ):
-
         with st.spinner("Extracting tables from the selected PDF..."):
-
             try:
-
                 tables = table_repository.extract_tables(
                     st.session_state.downloaded_document,
                     page_from=page_from,
@@ -345,13 +295,11 @@ extract tables and browse the extracted table repository.
                 )
 
             except Exception as error:
-
                 st.error(error)
 
                 return
 
         if not tables:
-
             st.warning("No tables were detected in the selected document.")
 
             return
@@ -366,7 +314,6 @@ extract tables and browse the extracted table repository.
     # =========================================================================
 
     if st.session_state.tables is None:
-
         return
 
     tables = st.session_state.tables
@@ -382,17 +329,14 @@ extract tables and browse the extracted table repository.
     col1, col2, col3 = st.columns(3)
 
     with col1:
-
         st.metric("Extracted Tables", len(tables))
 
     with col2:
-
         merged_pages = sum(len(table["Merged Pages"]) for table in tables)
 
         st.metric("Merged Pages", merged_pages)
 
     with col3:
-
         total_rows = sum(table["Rows"] for table in tables)
 
         st.metric("Total Rows", total_rows)
@@ -404,14 +348,11 @@ extract tables and browse the extracted table repository.
     table_labels = []
 
     for i, table in enumerate(tables):
-
         if table["Table Number"]:
-
-            label = f"{table['Table Number']} " f"(Page {table['Start Page']})"
+            label = f"{table['Table Number']} (Page {table['Start Page']})"
 
         else:
-
-            label = f"Table {i+1} " f"(Page {table['Start Page']})"
+            label = f"Table {i + 1} (Page {table['Start Page']})"
 
         table_labels.append(label)
 
@@ -436,9 +377,7 @@ extract tables and browse the extracted table repository.
         "Table Number": (
             table["Table Number"] if table["Table Number"] else "Not Available"
         ),
-        "Table Name": (
-            table["Table Name"] if table["Table Name"] else "Not Available"
-        ),
+        "Table Name": (table["Table Name"] if table["Table Name"] else "Not Available"),
         "Start Page": table["Start Page"],
         "End Page": table["End Page"],
         "Merged Pages": ", ".join(map(str, table["Merged Pages"])),
@@ -476,9 +415,7 @@ extract tables and browse the extracted table repository.
     csv = table["DataFrame"].to_csv(index=False).encode("utf-8")
 
     filename = (
-        table["Table Number"]
-        if table["Table Number"]
-        else f"Table_{selected+1}"
+        table["Table Number"] if table["Table Number"] else f"Table_{selected + 1}"
     )
 
     filename = filename.replace(" ", "_").replace("/", "_").replace(":", "")
@@ -499,14 +436,11 @@ extract tables and browse the extracted table repository.
     excel_buffer = BytesIO()
 
     with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
-
         metadata = pd.DataFrame(
             [
                 [
                     "PDF File Name",
-                    Path(
-                        st.session_state.downloaded_document["Local File"]
-                    ).name,
+                    Path(st.session_state.downloaded_document["Local File"]).name,
                 ],
                 ["Table Number", table["Table Number"] or "Not Available"],
                 ["Table Name", table["Table Name"] or "Not Available"],
@@ -546,10 +480,7 @@ extract tables and browse the extracted table repository.
             "⬇ Download Excel",
             data=excel_buffer.getvalue(),
             file_name=f"{filename}.xlsx",
-            mime=(
-                "application/vnd.openxmlformats-officedocument"
-                ".spreadsheetml.sheet"
-            ),
+            mime=("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
             use_container_width=True,
         )
 
@@ -560,11 +491,9 @@ extract tables and browse the extracted table repository.
     all_tables_buffer = BytesIO()
 
     with pd.ExcelWriter(all_tables_buffer, engine="openpyxl") as writer:
-
         summary = []
 
         for i, tbl in enumerate(tables, start=1):
-
             summary.append(
                 {
                     "Table No.": tbl["Table Number"] or f"Table {i}",
@@ -586,7 +515,6 @@ extract tables and browse the extracted table repository.
         format_repository_excel(summary_ws)
 
         for i, tbl in enumerate(tables, start=1):
-
             sheet_name = (
                 f"{tbl['Table Number']} {tbl['Table Name']}"
                 if tbl["Table Number"]
@@ -605,11 +533,9 @@ extract tables and browse the extracted table repository.
             worksheet = writer.sheets[sheet_name]
 
             try:
-
                 format_repository_excel(worksheet)
 
             except Exception as e:
-
                 st.error(f"Formatting failed for sheet '{sheet_name}': {e}")
 
     all_tables_buffer.seek(0)
@@ -619,9 +545,6 @@ extract tables and browse the extracted table repository.
             "⬇ Download All",
             data=all_tables_buffer.getvalue(),
             file_name=f"{table['Document ID']}_Extracted_Tables.xlsx",
-            mime=(
-                "application/vnd.openxmlformats-officedocument"
-                ".spreadsheetml.sheet"
-            ),
+            mime=("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
             use_container_width=True,
         )

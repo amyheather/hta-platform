@@ -3,35 +3,24 @@
 # Retrieval Augmented Generation (RAG)
 # =============================================================================
 
-import time
 import logging
 import shutil
-
-from datetime import datetime
+import time
 from collections import defaultdict
+from datetime import datetime
 
-import pdfplumber
 import chromadb
-
-from langchain.docstore.document import Document
-
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-
-from langchain_community.embeddings import HuggingFaceBgeEmbeddings
-
-from langchain_community.chat_models import ChatOllama
-
-from langchain.prompts import PromptTemplate
-
-from langchain.retrievers import ContextualCompressionRetriever
-
-from langchain.retrievers.document_compressors import CrossEncoderReranker
-
-from langchain_community.cross_encoders import HuggingFaceCrossEncoder
-
+import pdfplumber
 import repository
+from langchain.docstore.document import Document
+from langchain.prompts import PromptTemplate
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain.retrievers.document_compressors import CrossEncoderReranker
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
-
+from langchain_community.chat_models import ChatOllama
+from langchain_community.cross_encoders import HuggingFaceCrossEncoder
+from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from paths import VECTORSTORE_FOLDER
 
 # =============================================================================
@@ -145,17 +134,14 @@ def extract_pdf_text(pdf_path, metadata, page_from=None, page_to=None):
     pages = []
 
     with pdfplumber.open(pdf_path) as pdf:
-
         total_pages = len(pdf.pages)
 
         logger.info(f"Total Pages : {total_pages}")
 
         if page_from is None:
-
             page_from = 1
 
         if page_to is None:
-
             page_to = len(pdf.pages)
 
         page_from = max(1, page_from)
@@ -165,13 +151,11 @@ def extract_pdf_text(pdf_path, metadata, page_from=None, page_to=None):
         logger.info(f"Processing Pages : {page_from}-{page_to}")
 
         for page_number in range(page_from, page_to + 1):
-
             page = pdf.pages[page_number - 1]
 
             text = page.extract_text()
 
             if text is None:
-
                 text = ""
 
             text = text.strip()
@@ -225,11 +209,9 @@ def build_chunks(pages, metadata):
     chunk_counter = 1
 
     for page in pages:
-
         text = page["Text"].strip()
 
         if len(text) < MINIMUM_CHUNK_LENGTH:
-
             continue
 
         raw_chunks = splitter.split_text(text)
@@ -237,11 +219,9 @@ def build_chunks(pages, metadata):
         total_chunks = len(raw_chunks)
 
         for chunk_number, chunk in enumerate(raw_chunks, start=1):
-
             chunk = chunk.strip()
 
             if len(chunk) < MINIMUM_CHUNK_LENGTH:
-
                 continue
 
             documents.append(
@@ -256,9 +236,7 @@ def build_chunks(pages, metadata):
                         "page_chunk": chunk_number,
                         "total_page_chunks": total_chunks,
                         "chunk_length": len(chunk),
-                        "created_at": datetime.now().strftime(
-                            "%Y-%m-%d %H:%M:%S"
-                        ),
+                        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     },
                 )
             )
@@ -290,7 +268,6 @@ def load_embedding_model():
     global _embedding_model
 
     if _embedding_model is not None:
-
         return _embedding_model
 
     logger.info("Loading embedding model...")
@@ -299,9 +276,7 @@ def load_embedding_model():
         model_name=EMBEDDING_MODEL,
         model_kwargs=EMBEDDING_KWARGS,
         encode_kwargs=ENCODE_KWARGS,
-        query_instruction=(
-            "Represent this question for retrieving relevant " "passages:"
-        ),
+        query_instruction=("Represent this question for retrieving relevant passages:"),
         embed_instruction="Represent this document for retrieval:",
     )
 
@@ -343,17 +318,12 @@ def build_vector_store(documents, metadata):
     # chunks and duplicating/stale-ing the retrieved context.
     # ------------------------------------------------------------
 
-    collection_name = (
-        metadata["Document ID"].replace(" ", "_").replace("/", "_")
-    )
+    collection_name = metadata["Document ID"].replace(" ", "_").replace("/", "_")
 
     document_directory = VECTOR_FOLDER / collection_name
 
     if document_directory.exists():
-
-        logger.info(
-            f"Clearing existing vector store for {collection_name}..."
-        )
+        logger.info(f"Clearing existing vector store for {collection_name}...")
 
         shutil.rmtree(document_directory)
 
@@ -480,7 +450,6 @@ def build_prompt():
     # -------------------------------------------------------------------------
 
     if _prompt is not None:
-
         return _prompt
 
     logger.info("Building prompt template...")
@@ -515,9 +484,7 @@ Answer
 ------
 """
 
-    _prompt = PromptTemplate(
-        input_variables=["context", "question"], template=template
-    )
+    _prompt = PromptTemplate(input_variables=["context", "question"], template=template)
 
     return _prompt
 
@@ -542,7 +509,6 @@ def load_llm():
     global _llm
 
     if _llm is not None:
-
         return _llm
 
     logger.info("Loading Ollama model...")
@@ -586,11 +552,9 @@ def ask_question(question):
     # -------------------------------------------------------------------------
 
     if _reranker is None:
-
         raise RuntimeError("Please build the RAG pipeline first.")
 
     if _llm is None:
-
         load_llm()
 
     logger.info(f"Question : {question}")
@@ -608,7 +572,6 @@ def ask_question(question):
     retrieval_time = round(time.time() - retrieval_start, 2)
 
     if not documents:
-
         return {
             "question": question,
             "answer": "The selected document does not contain sufficient "
@@ -668,19 +631,16 @@ def ask_question(question):
     page_chunks = defaultdict(list)
 
     for doc in documents:
-
         page = doc.metadata.get("page")
 
         chunk = doc.metadata.get("chunk_id")
 
         if chunk not in page_chunks[page]:
-
             page_chunks[page].append(chunk)
 
     sources = []
 
     for page in sorted(page_chunks):
-
         sources.append({"page": page, "chunks": sorted(page_chunks[page])})
 
     logger.info(f"Retrieved {len(documents)} chunks.")
