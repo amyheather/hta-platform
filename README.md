@@ -1,6 +1,6 @@
 # hta-platform
 
-The HTA Platform is a Python and Streamlit-based application that supports Health Technology Assessment data extraction workflows. It combines web scraping, PDF table extraction and Retrieval-Augmented Generation (RAG) document search into a single application.
+The HTA Platform is a Python and Streamlit-based application that supports Health Technology Assessment data extraction workflows. It combines web scraping and PDF table extraction into a single application.
 
 This platform was developed by **Shantanu Fulaware** in their dissertation project for their MSc Health Data Science degree at the University of Exeter. It was developed with support from **Dawn Lee** and **Saul Stevens** in the Peninsula Technology Assessment Group (PenTAG) and **Thomas Monks** in the Peninsula Collaboration for Health Operational Research and Development group (PenCHORD).
 
@@ -10,7 +10,7 @@ This platform was developed by **Shantanu Fulaware** in their dissertation proje
 1. Install Python environment using conda (or mamba). This may take a minute or two to install.
 
 ```
-conda env create --file hta-platform/environment-vscode.yml
+conda env create --file hta-platform/environment.yml
 conda activate nice-hta-platform-dev
 ```
 
@@ -20,35 +20,21 @@ conda activate nice-hta-platform-dev
 * **macOS:** `brew install ghostscript`.
 * **Linux:** `sudo apt-get install ghostscript`.
 
-3. Install Ollama, either clicking download link in https://ollama.com/download or running:
-
-* **Windows:** `irm https://ollama.com/install.ps1 | iex`
-* **macOS:** `curl -fsSL https://ollama.com/install.sh | sh`
-* **Linux:** `curl -fsSL https://ollama.com/install.sh | sh`
-
 ## Streamlit app
 
-1. The RAG app section will use ollama. It is currently set to use "llama3:latest". Check you have this installed by running:
-
-```
-ollama list
-```
-
-If it is not there, you can either install it using `ollama pull llama3:latest`, or you can change the model used in `app/rag.py`, changing the value of `LLM_MODEL`.
-
-2. Change directory to `app`, which contains the Python code and data for the HTA platform.
+1. Change directory to `app`, which contains the Python code and data for the HTA platform.
 
 ```
 cd app
 ```
 
-3. Start the streamlit app by running:
+2. Start the streamlit app by running:
 
 ```
 python -m streamlit run streamlit_app.py
 ```
 
-4. You should then see a list of URLs - for example:
+3. You should then see a list of URLs - for example:
 
 ```
   You can now view your Streamlit app in your browser.
@@ -87,13 +73,3 @@ To extract tables...
 4. Click "Extract Tables". You can then use "Select Table" to browse between the selected tables, and download tables to CSV or Excel.
 
 ![Screenshot of extracted table.](images/table_extraction.png)
-
-### RAG Question Answering
-
-This section requires you to have NICE PDFs within your `documents/` folder (such as via the "Document Repository" app section).
-
-1. Enter the TA number for the documents you want to use. It should then list the available documents you have downloaded. Choose the relevant document.
-
-2. Select the page range to use then select "Process Document".
-
-3. Write your query, then click "Ask Question".

@@ -4,7 +4,6 @@
 # =============================================================================
 
 import streamlit as st
-from ui.rag_panel import show_rag_panel
 from ui.table_extraction import show_table_extraction
 from ui.web_scraper import show_web_scraper
 
@@ -29,9 +28,6 @@ DEFAULT_SESSION_STATE = {
     "available_documents": None,
     "selected_document": None,
     "tables": None,
-    "rag_ready": False,
-    "rag_result": None,
-    "rag_document": None,
     "nice_url": "TA970",
 }
 
@@ -41,46 +37,20 @@ for key, value in DEFAULT_SESSION_STATE.items():
 
 
 # =============================================================================
-# Title
+# Page
 # =============================================================================
 
-st.title("NICE HTA INFORMATION EXTRACTION PLATFORM")
+st.title("NICE HTA Information Extraction Platform")
 
 st.divider()
 
-
-# =============================================================================
-# Tabs
-# =============================================================================
-
-tab1, tab2, tab3 = st.tabs(
+tab1, tab2 = st.tabs(
     [
         "🌐 Web Scraper",
         "📊 Document Repository & Table Extraction",
-        "🤖 RAG Question Answering",
     ]
 )
-
-
-# =============================================================================
-# Tab 1
-# =============================================================================
-
 with tab1:
     show_web_scraper()
-
-
-# =============================================================================
-# Tab 2
-# =============================================================================
-
 with tab2:
     show_table_extraction()
-
-
-# =============================================================================
-# Tab 3
-# =============================================================================
-
-with tab3:
-    show_rag_panel()
