@@ -54,7 +54,7 @@ ENCODE_KWARGS = {"normalize_embeddings": True}
 
 RERANK_MODEL = "BAAI/bge-reranker-base"
 
-LLM_MODEL = "llama3.1:8b"
+LLM_MODEL = "llama3:latest"
 
 # =============================================================================
 # Chunk Configuration

@@ -26,35 +26,29 @@ conda activate nice-hta-platform-dev
 * **macOS:** `curl -fsSL https://ollama.com/install.sh | sh`
 * **Linux:** `curl -fsSL https://ollama.com/install.sh | sh`
 
-Run the following command to see a list of installed ollama models:
+## Streamlit app
+
+1. The RAG app section will use ollama. It is currently set to use "llama3:latest". Check you have this installed by running:
 
 ```
 ollama list
 ```
 
-You can check ollama is running:
+If it is not there, you can either install it using `ollama pull llama3:latest`, or you can change the model used in `app/rag.py`, changing the value of `LLM_MODEL`.
 
-```
-curl http://127.0.0.1:11434
-```
-
-Should return "Ollama is running".
-
-## Streamlit app
-
-1. Change directory to `app`, which contains the Python code and data for the HTA platform.
+2. Change directory to `app`, which contains the Python code and data for the HTA platform.
 
 ```
 cd app
 ```
 
-2. Start the streamlit app by running:
+3. Start the streamlit app by running:
 
 ```
 python -m streamlit run streamlit_app.py
 ```
 
-3. You should then see a list of URLs - for example:
+4. You should then see a list of URLs - for example:
 
 ```
   You can now view your Streamlit app in your browser.
