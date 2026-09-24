@@ -8,6 +8,7 @@ import re
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup, Tag
+
 from excel_manager import load_reference_excel
 
 # =============================================================================
@@ -154,7 +155,9 @@ def extract_title(soup):
 
 def extract_breadcrumbs(soup):
 
-    nav = soup.find("nav", attrs={"aria-label": re.compile("breadcrumb", re.IGNORECASE)})
+    nav = soup.find(
+        "nav", attrs={"aria-label": re.compile("breadcrumb", re.IGNORECASE)}
+    )
 
     if nav is None:
         return []

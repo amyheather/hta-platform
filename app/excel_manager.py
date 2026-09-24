@@ -8,6 +8,7 @@ import shutil
 from pathlib import Path
 
 import pandas as pd
+
 from paths import EXCEL_CONFIG_FILE, MASTER_EXCEL_FILE
 
 # =============================================================================

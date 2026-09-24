@@ -4,6 +4,7 @@
 # =============================================================================
 
 import streamlit as st
+
 from ui.document_finder import show_document_finder
 from ui.table_extraction import show_table_extraction
 from ui.web_scraper import show_web_scraper

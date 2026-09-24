@@ -8,6 +8,7 @@ from io import BytesIO
 
 import pandas as pd
 import streamlit as st
+
 import ta_scraper
 from excel_formatter import format_standard_table
 from excel_manager import (

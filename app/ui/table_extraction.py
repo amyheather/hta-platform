@@ -3,9 +3,9 @@
 # =============================================================================
 
 import base64
+import tempfile
 from io import BytesIO
 from pathlib import Path
-import tempfile
 
 import pandas as pd
 import streamlit as st
@@ -250,7 +250,7 @@ def show_table_extraction():
             data=csv,
             file_name=f"{filename}.csv",
             mime="text/csv",
-            width="stretch"
+            width="stretch",
         )
 
     # ----------------------------
@@ -305,7 +305,7 @@ def show_table_extraction():
             data=excel_buffer.getvalue(),
             file_name=f"{filename}.xlsx",
             mime=("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-            width="stretch"
+            width="stretch",
         )
 
     # ----------------------------
@@ -370,5 +370,5 @@ def show_table_extraction():
             data=all_tables_buffer.getvalue(),
             file_name=f"{table['Document ID']}_Extracted_Tables.xlsx",
             mime=("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-            width="stretch"
+            width="stretch",
         )

@@ -7,6 +7,7 @@ import logging
 import shutil
 
 import pandas as pd
+
 from paths import DOCUMENT_FOLDER, INDEX_FILE, PROJECT_ROOT
 
 # =============================================================================

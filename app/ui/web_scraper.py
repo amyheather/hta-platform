@@ -7,6 +7,7 @@ from io import BytesIO
 
 import pandas as pd
 import streamlit as st
+
 import ta_scraper
 from excel_formatter import format_standard_table
 from excel_manager import (
@@ -77,9 +78,7 @@ def show_web_scraper():
             "https://a.storyblok.com/f/243782/x/04c839059a/ta-recommendations.xlsx"
         )
 
-        st.link_button(
-            "Download NICE Reference Excel", nice_excel_url, width="stretch"
-        )
+        st.link_button("Download NICE Reference Excel", nice_excel_url, width="stretch")
 
     if st.session_state.replace_excel:
         uploaded_file = st.file_uploader(
