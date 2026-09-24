@@ -10,8 +10,8 @@ This platform was developed by **Shantanu Fulaware** in their dissertation proje
 1. Install Python environment using conda (or mamba). This may take a minute or two to install.
 
 ```
-conda env create --file hta-platform/environment.yml
-conda activate nice-hta-platform-dev
+conda env create --file environment.yml
+conda activate hta-platform
 ```
 
 2. Install Ghostscript.
