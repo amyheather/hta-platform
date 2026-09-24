@@ -2,9 +2,9 @@
 # Document Finder
 # =============================================================================
 
-from pathlib import Path
 
 import streamlit as st
+
 import ta_scraper
 import table_repository
 
@@ -32,6 +32,15 @@ def show_document_finder():
 
     if "available_documents" not in st.session_state:
         st.session_state.available_documents = None
+
+    if "download_zip" not in st.session_state:
+        st.session_state.download_zip = None
+
+    if "download_filename" not in st.session_state:
+        st.session_state.download_filename = None
+
+    if "download_success_message" not in st.session_state:
+        st.session_state.download_success_message = None
 
     # =========================================================================
     # Document discovery
@@ -95,7 +104,6 @@ def show_document_finder():
             "Document ID",
             "Document Name",
             "File Type",
-            "Download Status",
         ],
         hide_index=True,
         width="stretch",
@@ -103,7 +111,9 @@ def show_document_finder():
     )
 
     if st.button(
-        "Download Selected Documents", type="primary", width="stretch"
+        "Prepare selected documents",
+        type="primary",
+        width="stretch",
     ):
         selected_documents = edited_documents.loc[edited_documents["Select"]].drop(
             columns="Select"
@@ -111,47 +121,30 @@ def show_document_finder():
 
         if selected_documents.empty:
             st.warning("Please select at least one document.")
-
             return
 
-        with st.spinner("Downloading selected documents..."):
+        with st.spinner("Preparing download..."):
             try:
-                downloaded = table_repository.download_selected_documents(
-                    selected_documents
-                )
-
-                repository_df = table_repository.update_repository(downloaded)
-
-                # ---------------------------------------------------
-                # Refresh Available Documents
-                # ---------------------------------------------------
-
-                st.session_state.available_documents = (
-                    table_repository.update_download_status(
-                        st.session_state.available_documents
-                    )
-                )
-
+                zip_bytes = table_repository.create_download_zip(selected_documents)
             except Exception as error:
-                st.error(error)
+                st.error(f"Could not prepare download: {error}")
+            else:
+                ta_number = selected_documents.iloc[0]["TA Number"]
 
-                return
+                st.session_state.download_zip = zip_bytes
+                st.session_state.download_filename = f"{ta_number}_documents.zip"
+                st.session_state.download_success_message = (
+                    f"{len(selected_documents)} document(s) ready to download."
+                )
+    if st.session_state.download_success_message:
+        st.success(st.session_state.download_success_message)
 
-        # -----------------------------------------------------------------
-        # Already Downloaded Message
-        # -----------------------------------------------------------------
-
-        st.session_state.repository = repository_df
-
-        new_downloads = downloaded.attrs.get("new_downloads", 0)
-
-        already_downloaded = downloaded.attrs.get("already_downloaded", 0)
-
-        if new_downloads:
-            st.success(f"✅ {new_downloads} document(s) downloaded successfully.")
-
-        if already_downloaded:
-            st.info(
-                f"ℹ {already_downloaded} document(s) were already "
-                "available in your repository."
-            )
+    if st.session_state.download_zip is not None:
+        st.download_button(
+            label="Download selected documents",
+            data=st.session_state.download_zip,
+            file_name=st.session_state.download_filename,
+            mime="application/zip",
+            type="primary",
+            width="stretch",
+        )

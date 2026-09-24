@@ -15,6 +15,7 @@ import pandas as pd
 import pdfplumber
 import requests
 from bs4 import BeautifulSoup
+
 from paths import (
     DOCUMENT_FOLDER,
     INDEX_FILE,
@@ -477,6 +478,38 @@ def download_selected_documents(documents):
     repository.attrs["already_downloaded"] = already_downloaded
 
     return repository
+
+
+# =============================================================================
+# Create Download ZIP
+# =============================================================================
+
+from io import BytesIO
+from zipfile import ZIP_DEFLATED, ZipFile
+
+
+def create_download_zip(documents):
+    """Return the selected NICE documents as a ZIP file in memory."""
+    zip_buffer = BytesIO()
+
+    with ZipFile(zip_buffer, "w", ZIP_DEFLATED) as zip_file:
+        for _, document in documents.iterrows():
+            response = requests.get(
+                document["Document URL"],
+                headers=HEADERS,
+                timeout=REQUEST_TIMEOUT,
+            )
+            response.raise_for_status()
+
+            filename = safe_filename(
+                document["Document ID"],
+                document["Document Name"],
+                document["File Type"],
+            )
+
+            zip_file.writestr(filename, response.content)
+
+    return zip_buffer.getvalue()
 
 
 # =============================================================================
