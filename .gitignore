@@ -218,5 +218,8 @@ __marimo__/
 .streamlit/secrets.toml
 
 # HTA platform
-hta-platform/config/
-hta-platform/documents/
+app/config/
+app/documents/
+app/tables/
+app/repository_index.csv
+app/vectorstore
