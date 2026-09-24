@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# HTA platform
+hta-platform/config/
+hta-platform/documents/
