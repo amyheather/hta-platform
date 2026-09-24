@@ -74,14 +74,14 @@ def show_web_scraper():
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button("Replace Reference Excel", use_container_width=True):
+        if st.button("Replace Reference Excel", width="stretch"):
             st.session_state.replace_excel = True
 
     # with col2:
     # st.link_button(
     # "Open NICE Reference Excel",
     # "https://a.storyblok.com/f/243782/x/04c839059a/ta-recommendations.xlsx",
-    # use_container_width=True
+    # width="stretch"
     # )
 
     with col2:
@@ -172,7 +172,7 @@ def show_web_scraper():
 
     st.subheader("Results")
 
-    st.dataframe(result, hide_index=True, use_container_width=True)
+    st.dataframe(result, hide_index=True, width="stretch")
 
     # -------------------------------------------------------------------------
     # Download Options
@@ -192,7 +192,7 @@ def show_web_scraper():
             data=csv,
             file_name="TA_Web_Scraper_Output.csv",
             mime="text/csv",
-            use_container_width=True,
+            width="stretch",
         )
 
     # -------------------------------------------------------------------------
@@ -227,5 +227,5 @@ def show_web_scraper():
             data=output.getvalue(),
             file_name=excel_filename,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            use_container_width=True,
+            width="stretch",
         )
