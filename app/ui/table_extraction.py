@@ -1,14 +1,15 @@
 # =============================================================================
-# Document Repository & Table Extraction
+# Table Extraction
 # =============================================================================
 
 import base64
 from io import BytesIO
 from pathlib import Path
+import tempfile
 
 import pandas as pd
 import streamlit as st
-import ta_scraper
+
 import table_repository
 from excel_formatter import (
     format_repository_excel,
@@ -24,247 +25,61 @@ def show_table_extraction():
     """
     Document Repository & Table Extraction
     """
+    st.header("📊 Table Extractor")
 
-    st.header("📊 Document Repository & Table Extraction")
+    st.markdown(
+        """
+        Upload a PDF file, choose the page range, and extract tables.
+        """
+    )
 
-    st.markdown("""
-Discover NICE documents, download PDF files,
-extract tables and browse the extracted table repository.
-""")
+    # =========================================================================
+    # Upload PDF
+    # =========================================================================
 
-    st.divider()
+    uploaded_pdf = st.file_uploader(
+        "Choose a PDF file",
+        type=["pdf"],
+        accept_multiple_files=False,
+        key="table_extractor_pdf_upload",
+    )
 
-    # -------------------------------------------------------------------------
-    # Session State
-    # -------------------------------------------------------------------------
+    if uploaded_pdf is None:
+        st.info("Upload a PDF file to begin extracting tables.")
+        return
 
-    if "nice_url" not in st.session_state:
-        st.session_state.nice_url = "TA970"
-
-    if "available_documents" not in st.session_state:
-        st.session_state.available_documents = None
-
-    if "repository" not in st.session_state:
-        st.session_state.repository = None
-
-    if "selected_document" not in st.session_state:
-        st.session_state.selected_document = None
-
-    if "downloaded_document" not in st.session_state:
-        st.session_state.downloaded_document = None
-
-    if "tables" not in st.session_state:
+    # Clear previously extracted tables if the user uploads another PDF.
+    if st.session_state.get("table_extractor_source_name") != uploaded_pdf.name:
         st.session_state.tables = None
+        st.session_state.table_extractor_source_name = uploaded_pdf.name
 
-    # =========================================================================
-    # STEP 1
-    # Document Discovery
-    # =========================================================================
-
-    st.subheader("Discover NICE Documents")
-
-    nice_url = st.text_input(
-        "NICE Technology Appraisal",
-        value=st.session_state.nice_url,
-        placeholder="TA970 or https://www.nice.org.uk/guidance/TA970",
-        key="table_extraction_ta",
-    )
-
-    if st.button("Discover Documents", type="primary", use_container_width=True):
-        if not nice_url.strip():
-            st.warning("Please enter a NICE Technology Appraisal Number or URL.")
-
-            return
-
-        with st.spinner("Discovering NICE documents..."):
-            try:
-                documents = table_repository.discover_documents(
-                    ta_scraper.normalize_ta_input(nice_url)
-                )
-
-            except Exception as error:
-                st.error(error)
-
-                return
-
-        if documents.empty:
-            st.warning("No downloadable documents were found.")
-
-            return
-
-        st.session_state.nice_url = nice_url
-
-        st.session_state.available_documents = documents
-
-        st.success(f"{len(documents)} document(s) discovered successfully.")
-
-    # =========================================================================
-    # STEP 2
-    # Select Documents
-    # =========================================================================
-
-    if st.session_state.available_documents is None:
-        return
+    st.success(f"✔ Uploaded: {uploaded_pdf.name}")
 
     st.divider()
 
-    st.subheader("Select Documents")
-
-    documents = st.session_state.available_documents.copy()
-
-    documents.insert(0, "Select", False)
-
-    edited_documents = st.data_editor(
-        documents,
-        column_order=[
-            "Select",
-            "TA Number",
-            "Document ID",
-            "Document Name",
-            "File Type",
-            "Download Status",
-        ],
-        hide_index=True,
-        use_container_width=True,
-        disabled=[column for column in documents.columns if column != "Select"],
-    )
-
-    if st.button(
-        "Download Selected Documents", type="primary", use_container_width=True
-    ):
-        selected_documents = edited_documents.loc[edited_documents["Select"]].drop(
-            columns="Select"
-        )
-
-        if selected_documents.empty:
-            st.warning("Please select at least one document.")
-
-            return
-
-        with st.spinner("Downloading selected documents..."):
-            try:
-                downloaded = table_repository.download_selected_documents(
-                    selected_documents
-                )
-
-                repository_df = table_repository.update_repository(downloaded)
-
-                # ---------------------------------------------------
-                # Refresh Available Documents
-                # ---------------------------------------------------
-
-                st.session_state.available_documents = (
-                    table_repository.update_download_status(
-                        st.session_state.available_documents
-                    )
-                )
-
-            except Exception as error:
-                st.error(error)
-
-                return
-
-        # -----------------------------------------------------------------
-        # Already Downloaded Message
-        # -----------------------------------------------------------------
-
-        st.session_state.repository = repository_df
-
-        new_downloads = downloaded.attrs.get("new_downloads", 0)
-
-        already_downloaded = downloaded.attrs.get("already_downloaded", 0)
-
-        if new_downloads:
-            st.success(f"✅ {new_downloads} document(s) downloaded successfully.")
-
-        if already_downloaded:
-            st.info(
-                f"ℹ {already_downloaded} document(s) were already "
-                "available in your repository."
-            )
-
-        if len(downloaded):
-            st.session_state.downloaded_document = downloaded.iloc[0]
-
-    # ---------------------------------------------------------------------
-    # Selected Document
-    # ---------------------------------------------------------------------
-
-    if st.session_state.downloaded_document is not None:
-        st.divider()
-
-        st.subheader("Selected Document")
-
-        document = st.session_state.downloaded_document
-
-        pdf_path = Path(document["Local File"])
-
-        st.success(f"✔ {document['Document Name']} is now available.")
-
-        col1, col2 = st.columns(2)
-
-        # -------------------------------------------------------------
-        # Document PREVIEW and DOWNLOAD
-        # -------------------------------------------------------------
-        with col1:
-            if st.button("👁 Preview PDF", use_container_width=True):
-                st.session_state.preview_pdf = str(pdf_path)
-        # -------------------------------------------------------------
-        # Download
-        # -------------------------------------------------------------
-
-        with col2, open(pdf_path, "rb") as pdf_file:
-            st.download_button(
-                "⬇ Download PDF",
-                data=pdf_file,
-                file_name=pdf_path.name,
-                mime="application/pdf",
-                use_container_width=True,
-            )
-
-        # -------------------------------------------------------------
-        # PDF Preview
-        # -------------------------------------------------------------
-
-        if st.session_state.get("preview_pdf") == str(pdf_path) and pdf_path.exists():
-            pdf_size_mb = pdf_path.stat().st_size / (1024 * 1024)
-
-            if pdf_size_mb <= 10:
-                with open(pdf_path, "rb") as pdf_file:
-                    base64_pdf = base64.b64encode(pdf_file.read()).decode("utf-8")
-
-                pdf_display = f"""
-                <iframe
-                    src="data:application/pdf;base64,{base64_pdf}"
-                    width="100%"
-                    height="800"
-                    type="application/pdf">
-                </iframe>
-                """
-
-                st.markdown(pdf_display, unsafe_allow_html=True)
-
-            else:
-                st.warning(
-                    "This document is larger than 10 MB and cannot "
-                    "be previewed. Please download the PDF."
-                )
-
     # =========================================================================
-    # STEP 5
-    # Table Extraction
+    # Preview PDF
     # =========================================================================
+
+    if st.button("👁 Preview PDF", width="stretch"):
+        base64_pdf = base64.b64encode(uploaded_pdf.read()).decode("utf-8")
+        pdf_display = f"""
+        <iframe
+            src="data:application/pdf;base64,{base64_pdf}"
+            width="100%"
+            height="800"
+            type="application/pdf">
+        </iframe>
+        """
+        st.markdown(pdf_display, unsafe_allow_html=True)
 
     st.divider()
 
-    st.subheader("Table Extraction")
+    # =========================================================================
+    # Page range
+    # =========================================================================
 
-    if st.session_state.downloaded_document is None:
-        st.info("Please download a document before extracting tables.")
-
-        return
-
-    st.markdown("### Page Range")
+    st.subheader("Page Range")
 
     col1, col2 = st.columns(2)
 
@@ -280,51 +95,60 @@ extract tables and browse the extracted table repository.
 
     st.write("")
 
+    # =========================================================================
+    # Table extraction
+    # =========================================================================
+
     if st.button(
         "Extract Tables",
         type="primary",
-        use_container_width=True,
+        width="stretch",
     ):
         with st.spinner("Extracting tables from the selected PDF..."):
             try:
-                tables = table_repository.extract_tables(
-                    st.session_state.downloaded_document,
-                    page_from=page_from,
-                    page_to=page_to,
-                    export=True,
-                )
+                # extract_tables previously received a repository document with a
+                # Local File path. Preserve that existing interface by creating a
+                # temporary PDF and a minimal equivalent document record.
+                with tempfile.TemporaryDirectory() as temporary_directory:
+                    pdf_path = Path(temporary_directory) / uploaded_pdf.name
+                    pdf_path.write_bytes(uploaded_pdf.getvalue())
+
+                    document = {
+                        "Local File": str(pdf_path),
+                        "Document ID": pdf_path.stem,
+                        "Document Name": uploaded_pdf.name,
+                    }
+
+                    tables = table_repository.extract_tables(
+                        document,
+                        page_from=page_from,
+                        page_to=page_to,
+                        export=False,
+                    )
 
             except Exception as error:
                 st.error(error)
-
                 return
 
         if not tables:
             st.warning("No tables were detected in the selected document.")
-
             return
 
         st.session_state.tables = tables
 
         st.success(f"{len(tables)} table(s) extracted successfully.")
 
-    # ========================================================================
-    # STEP 6
-    # Table Repository
+    # =========================================================================
+    # Table repository
     # =========================================================================
 
-    if st.session_state.tables is None:
+    tables = st.session_state.get("tables")
+
+    if not tables:
         return
 
-    tables = st.session_state.tables
-
     st.divider()
-
     st.subheader("Table Repository")
-
-    # -------------------------------------------------------------------------
-    # Repository Summary
-    # -------------------------------------------------------------------------
 
     col1, col2, col3 = st.columns(3)
 
@@ -341,9 +165,9 @@ extract tables and browse the extracted table repository.
 
         st.metric("Total Rows", total_rows)
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # Table Selection
-    # -------------------------------------------------------------------------
+    # =========================================================================
 
     table_labels = []
 
@@ -365,9 +189,9 @@ extract tables and browse the extracted table repository.
 
     table = tables[selected]
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # Metadata
-    # -------------------------------------------------------------------------
+    # =========================================================================
 
     st.divider()
 
@@ -387,21 +211,21 @@ extract tables and browse the extracted table repository.
 
     metadata_df = pd.DataFrame(metadata.items(), columns=["Field", "Value"])
 
-    st.dataframe(metadata_df, hide_index=True, use_container_width=True)
+    st.dataframe(metadata_df, hide_index=True, width="stretch")
 
-    # -------------------------------------------------------------------------
-    # Table Preview
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # Table preview
+    # =========================================================================
 
     st.divider()
 
     st.subheader("Table Preview")
 
-    st.dataframe(table["DataFrame"], hide_index=True, use_container_width=True)
+    st.dataframe(table["DataFrame"], hide_index=True, width="stretch")
 
-    # -------------------------------------------------------------------------
-    # Export
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # Downloads
+    # =========================================================================
 
     st.divider()
     st.subheader("Download Table")
@@ -426,7 +250,7 @@ extract tables and browse the extracted table repository.
             data=csv,
             file_name=f"{filename}.csv",
             mime="text/csv",
-            use_container_width=True,
+            width="stretch"
         )
 
     # ----------------------------
@@ -481,7 +305,7 @@ extract tables and browse the extracted table repository.
             data=excel_buffer.getvalue(),
             file_name=f"{filename}.xlsx",
             mime=("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-            use_container_width=True,
+            width="stretch"
         )
 
     # ----------------------------
@@ -542,9 +366,9 @@ extract tables and browse the extracted table repository.
 
     with col3:
         st.download_button(
-            "⬇ Download All",
+            "⬇ Download All to Excel",
             data=all_tables_buffer.getvalue(),
             file_name=f"{table['Document ID']}_Extracted_Tables.xlsx",
             mime=("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-            use_container_width=True,
+            width="stretch"
         )
