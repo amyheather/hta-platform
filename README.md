@@ -4,6 +4,7 @@ The HTA Platform is a Python and Streamlit-based application that supports Healt
 
 This platform was developed by **Shantanu Fulaware** in their dissertation project for their MSc Health Data Science degree at the University of Exeter. It was developed with support from **Dawn Lee** and **Saul Stevens** in the Peninsula Technology Assessment Group (PenTAG) and **Thomas Monks** in the Peninsula Collaboration for Health Operational Research and Development group (PenCHORD).
 
+Some amendments have been made by **Amy Heather** to support deployment on Streamlit Community Cloud, so the PenTAG team are able to run the app from the browser.
 
 ## Set-up
 
