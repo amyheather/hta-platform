@@ -111,7 +111,7 @@ def show_document_finder():
     )
 
     if st.button(
-        "Prepare selected documents",
+        "Prepare selected documents for download",
         type="primary",
         width="stretch",
     ):
