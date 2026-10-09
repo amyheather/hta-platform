@@ -262,10 +262,7 @@ def show_table_extraction():
     with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
         metadata = pd.DataFrame(
             [
-                [
-                    "PDF File Name",
-                    Path(st.session_state.downloaded_document["Local File"]).name,
-                ],
+                ["PDF File Name", uploaded_pdf.name,],
                 ["Table Number", table["Table Number"] or "Not Available"],
                 ["Table Name", table["Table Name"] or "Not Available"],
                 ["Start Page", table["Start Page"]],
