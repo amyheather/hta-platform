@@ -10,12 +10,6 @@ import streamlit as st
 
 import ta_scraper
 from excel_formatter import format_standard_table
-from excel_manager import (
-    excel_available,
-    get_excel_information,
-    replace_excel,
-    save_excel,
-)
 
 # =============================================================================
 # Web Scraper UI
@@ -31,71 +25,11 @@ def show_web_scraper():
     if "scraper_result" not in st.session_state:
         st.session_state.scraper_result = None
 
-    if "replace_excel" not in st.session_state:
-        st.session_state.replace_excel = False
-
-    # -------------------------------------------------------------------------
-    # Header
-    # -------------------------------------------------------------------------
-
-    st.header("TA Web Scraper")
-
-    # -------------------------------------------------------------------------
-    # Reference Excel
-    # -------------------------------------------------------------------------
-
-    st.subheader("Reference Excel")
-
-    if not excel_available():
-        uploaded_file = st.file_uploader("Upload Reference Excel", type=["xlsx", "xls"])
-
-        if uploaded_file is not None:
-            with st.spinner("Uploading reference Excel..."):
-                save_excel(uploaded_file)
-
-            st.rerun()
-
-        return
-
-    # -------------------------------------------------------------------------
-    # Existing Excel Information
-    # -------------------------------------------------------------------------
-
-    info = get_excel_information()
-
-    filename = info.get("original_filename", "master_reference.xlsx")
-
-    st.info(f"Currently using reference Excel: **{filename}**")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        if st.button("Replace Reference Excel", width="stretch"):
-            st.session_state.replace_excel = True
-
-    with col2:
-        nice_excel_url = (
-            "https://a.storyblok.com/f/243782/x/04c839059a/ta-recommendations.xlsx"
-        )
-
-        st.link_button("Download NICE Reference Excel", nice_excel_url, width="stretch")
-
-    if st.session_state.replace_excel:
-        uploaded_file = st.file_uploader(
-            "Select New Excel", type=["xlsx", "xls"], key="replace_reference_excel"
-        )
-
-        if uploaded_file is not None:
-            with st.spinner("Replacing reference Excel..."):
-                replace_excel(uploaded_file)
-
-            st.session_state.replace_excel = False
-
-            st.rerun()
-
     # -------------------------------------------------------------------------
     # TA Input
     # -------------------------------------------------------------------------
+
+    st.header("TA Web Scraper")
 
     st.subheader("Enter TA Number / NICE URL")
 
@@ -115,7 +49,7 @@ def show_web_scraper():
 
         with st.spinner("Retrieving information from NICE..."):
             try:
-                result, multiple_rows = ta_scraper.scrape_ta_page(ta_value.strip())
+                result, _ = ta_scraper.scrape_ta_page(ta_value.strip())
 
                 st.session_state.scraper_result = result
 
