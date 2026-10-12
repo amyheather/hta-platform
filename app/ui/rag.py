@@ -8,7 +8,7 @@ import streamlit as st
 def show_rag():
     """Display instructions and a reusable HTA prompt."""
 
-    st.header("🤖 AI Prompt Builder")
+    st.header("🤖 AI Prompt Template")
 
     st.markdown(
         """
