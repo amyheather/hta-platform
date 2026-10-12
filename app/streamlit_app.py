@@ -6,6 +6,7 @@
 import streamlit as st
 
 from ui.document_finder import show_document_finder
+from ui.rag import show_rag
 from ui.table_extraction import show_table_extraction
 from ui.web_scraper import show_web_scraper
 
@@ -56,6 +57,10 @@ developed with support from **Dawn Lee** and **Saul Stevens** in the Peninsula
 Technology Assessment Group (PenTAG) and **Thomas Monks** in the Peninsula
 Collaboration for Health Operational Research and Development group (PenCHORD).
 
+Some amendments have been made by **Amy Heather** to support deployment on
+Streamlit Community Cloud, so the PenTAG team are able to run the app from
+the browser.
+
 **App features:**
 
 - **🌐 Web Scraper:** Retrieve and explore content from NICE technology
@@ -63,15 +68,18 @@ Collaboration for Health Operational Research and Development group (PenCHORD).
 - **📄 Document Finder:** Download, organise, and review relevant appraisal
   documents.
 - **📊 Table Extractor:** Extract tables from PDF documents for further
-  analysis.""")
+  analysis.
+- **🤖 AI Prompt Builder:** Create a prompt to use with an AI tool of your
+  choice.""")
 
 st.divider()
 
-tab1, tab2, tab3 = st.tabs(
+tab1, tab2, tab3, tab4 = st.tabs(
     [
         "🌐 Web Scraper",
         "📄 Document Finder",
         "📊 Table Extractor",
+        "🤖 AI Prompt Builder"
     ]
 )
 with tab1:
@@ -80,3 +88,5 @@ with tab2:
     show_document_finder()
 with tab3:
     show_table_extraction()
+with tab4:
+    show_rag()
