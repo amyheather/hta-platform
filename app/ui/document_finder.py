@@ -92,9 +92,13 @@ def show_document_finder():
 
     st.subheader("Select Documents")
 
+    select_all = st.checkbox(
+        "Select all documents",
+        key="document_finder_select_all",
+    )
     documents = st.session_state.available_documents.copy()
 
-    documents.insert(0, "Select", False)
+    documents.insert(0, "Select", select_all)
 
     edited_documents = st.data_editor(
         documents,
@@ -108,6 +112,7 @@ def show_document_finder():
         hide_index=True,
         width="stretch",
         disabled=[column for column in documents.columns if column != "Select"],
+        key=f"document_finder_editor_{select_all}"
     )
 
     if st.button(
