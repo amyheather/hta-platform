@@ -8,18 +8,13 @@ Some amendments have been made by **Amy Heather** to support deployment on Strea
 
 ## Set-up
 
-1. Install Python environment using conda (or mamba). This may take a minute or two to install.
+Install Python environment using conda (or mamba). This may take a minute or two to install.
 
 ```
-conda env create --file environment.yml
-conda activate hta-platform
+conda create -n "hta-app" python=3.11
+conda activate hta-app
+pip install -r requirements.txt
 ```
-
-2. Install Ghostscript.
-
-*  **Windows:** Download and install from https://ghostscript.com/index.html.
-* **macOS:** `brew install ghostscript`.
-* **Linux:** `sudo apt-get install ghostscript`.
 
 ## Streamlit app
 
@@ -74,3 +69,13 @@ To extract tables...
 4. Click "Extract Tables". You can then use "Select Table" to browse between the selected tables, and download tables to CSV or Excel.
 
 ![Screenshot of extracted table.](images/table_extraction.png)
+
+## Streamlit community cloud
+
+The app will be deployed on Streamlit community cloud. A separate `cloud-requirements.txt` file is provided with the minimal dependencies for deployment. To test this environment locally:
+
+```
+mamba create -n "hta-platform-cloud" python=3.11
+mamba activate hta-platform-cloud
+pip install -r requirements.txts
+```
