@@ -69,7 +69,7 @@ the browser.
   documents.
 - **📊 Table Extractor:** Extract tables from PDF documents for further
   analysis.
-- **🤖 AI Prompt Template:** Get a prompt to use with an AI tool of your
+- **🤖 AI Prompt Builder:** Build a prompt to use with an AI tool of your
   choice.""")
 
 st.divider()
@@ -79,7 +79,7 @@ tab1, tab2, tab3, tab4 = st.tabs(
         "🌐 Web Scraper",
         "📄 Document Finder",
         "📊 Table Extractor",
-        "🤖 AI Prompt Template"
+        "🤖 AI Prompt Builder"
     ]
 )
 with tab1:
