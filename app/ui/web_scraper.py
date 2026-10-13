@@ -46,6 +46,13 @@ def show_web_scraper():
 
     st.subheader("Reference Excel")
 
+    st.markdown("""
+Go to [Technology appraisal data: appraisal recommendations](https://www.nice.org.uk/what-nice-does/our-guidance/about-technology-appraisal-guidance/technology-appraisal-data-appraisal-recommendations)
+on the NICE website to download the latest reference Excel file. Scroll down
+to the "Technology appraisal recommendations (Excel)". You can also try this
+[direct download link](https://a.storyblok.com/f/243782/x/756a7b93f5/ta-recommendations.xlsx).
+""")
+
     if not excel_available():
         uploaded_file = st.file_uploader("Upload Reference Excel", type=["xlsx", "xls"])
 
