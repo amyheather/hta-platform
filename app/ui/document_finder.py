@@ -33,11 +33,17 @@ def show_document_finder():
     if "available_documents" not in st.session_state:
         st.session_state.available_documents = None
 
-    if "download_zip" not in st.session_state:
-        st.session_state.download_zip = None
+    if "download_data" not in st.session_state:
+        st.session_state.download_data = None
 
     if "download_filename" not in st.session_state:
         st.session_state.download_filename = None
+
+    if "download_mime" not in st.session_state:
+        st.session_state.download_mime = None
+
+    if "download_label" not in st.session_state:
+        st.session_state.download_label = None
 
     if "download_success_message" not in st.session_state:
         st.session_state.download_success_message = None
@@ -78,6 +84,11 @@ def show_document_finder():
         st.session_state.nice_url = nice_url
 
         st.session_state.available_documents = documents
+        st.session_state.download_data = None
+        st.session_state.download_filename = None
+        st.session_state.download_mime = None
+        st.session_state.download_label = None
+        st.session_state.download_success_message = None
 
         st.success(f"{len(documents)} document(s) discovered successfully.")
 
@@ -91,6 +102,11 @@ def show_document_finder():
     st.divider()
 
     st.subheader("Select Documents")
+
+    st.markdown("""
+A single selected document downloads directly. If multiple documents are
+selected, they are downloaded as a ZIP file so they can be delivered together.
+""")
 
     select_all = st.checkbox(
         "Select all documents",
@@ -130,26 +146,50 @@ def show_document_finder():
 
         with st.spinner("Preparing download..."):
             try:
-                zip_bytes = table_repository.create_download_zip(selected_documents)
+                if len(selected_documents) == 1:
+                    document = selected_documents.iloc[0]
+
+                    file_bytes, filename, mime_type = (
+                        table_repository.get_download_file(document)
+                    )
+
+                    st.session_state.download_data = file_bytes
+                    st.session_state.download_filename = filename
+                    st.session_state.download_mime = mime_type
+                    st.session_state.download_label = "Download document"
+                    st.session_state.download_success_message = (
+                        "1 document ready to download."
+                    )
+
+                else:
+                    zip_bytes = table_repository.create_download_zip(
+                        selected_documents
+                    )
+
+                    ta_number = selected_documents.iloc[0]["TA Number"]
+
+                    st.session_state.download_data = zip_bytes
+                    st.session_state.download_filename = f"{ta_number}_documents.zip"
+                    st.session_state.download_mime = "application/zip"
+                    st.session_state.download_label = "Download documents"
+                    st.session_state.download_success_message = (
+                        f"{len(selected_documents)} documents ready to download "
+                        "as a ZIP file."
+                    )
+
             except Exception as error:
                 st.error(f"Could not prepare download: {error}")
-            else:
-                ta_number = selected_documents.iloc[0]["TA Number"]
+                return
 
-                st.session_state.download_zip = zip_bytes
-                st.session_state.download_filename = f"{ta_number}_documents.zip"
-                st.session_state.download_success_message = (
-                    f"{len(selected_documents)} document(s) ready to download."
-                )
     if st.session_state.download_success_message:
         st.success(st.session_state.download_success_message)
 
-    if st.session_state.download_zip is not None:
+    if st.session_state.download_data is not None:
         st.download_button(
-            label="Download selected documents",
-            data=st.session_state.download_zip,
+            label=st.session_state.download_label,
+            data=st.session_state.download_data,
             file_name=st.session_state.download_filename,
-            mime="application/zip",
+            mime=st.session_state.download_mime,
             type="primary",
             width="stretch",
         )

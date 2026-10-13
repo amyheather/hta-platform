@@ -512,6 +512,38 @@ def create_download_zip(documents):
     return zip_buffer.getvalue()
 
 
+def get_download_file(document):
+    """
+    Return one NICE document as bytes, filename and MIME type.
+    """
+
+    response = requests.get(
+        document["Document URL"],
+        headers=HEADERS,
+        timeout=REQUEST_TIMEOUT,
+    )
+
+    response.raise_for_status()
+
+    filename = safe_filename(
+        document["Document ID"],
+        document["Document Name"],
+        document["File Type"],
+    )
+
+    file_type = str(document["File Type"]).strip().upper()
+
+    mime_types = {
+        "PDF": "application/pdf",
+        "WORD": "application/msword",
+        "EXCEL": "application/vnd.ms-excel",
+    }
+
+    mime_type = mime_types.get(file_type, "application/octet-stream")
+
+    return response.content, filename, mime_type
+
+
 # =============================================================================
 # Save Repository
 # =============================================================================
