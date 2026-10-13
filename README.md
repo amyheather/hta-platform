@@ -18,19 +18,13 @@ pip install -r requirements.txt
 
 ## Streamlit app
 
-1. Change directory to `app`, which contains the Python code and data for the HTA platform.
+1. Start the streamlit app by running:
 
 ```
-cd app
+python -m streamlit run app/streamlit_app.py
 ```
 
-2. Start the streamlit app by running:
-
-```
-python -m streamlit run streamlit_app.py
-```
-
-3. You should then see a list of URLs - for example:
+2. You should then see a list of URLs - for example:
 
 ```
   You can now view your Streamlit app in your browser.
